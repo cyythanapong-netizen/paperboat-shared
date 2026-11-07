@@ -303,6 +303,8 @@ export type ToolkitStatus = {
   default?: string;
   /** Ships with the engine (always installed). */
   builtin?: boolean;
+  /** Block types this toolkit provides (from toolkits.toml), so a flow with missing blocks can name the toolkit to install. */
+  blocks?: string[];
   /** Set while an operation is running for this toolkit. */
   busy?: "installing" | "updating" | "uninstalling";
 };
