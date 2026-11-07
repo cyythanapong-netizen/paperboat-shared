@@ -1,0 +1,51 @@
+# @paperboat/shared
+
+The UI kit behind Paperboat's apps, with no domain logic: nothing here knows about a simulation
+runtime or Modelica.
+
+| Area | Files |
+| --- | --- |
+| Tokens, Geist fonts, light/dark | `src/tokens.css`, `src/plates.css` (plate, port, wire, menu rules) |
+| Controls and menus | `Menus.tsx`, `commands.ts`, `NumberField.tsx`, `Dock.tsx` |
+| Blocks and ports | `Compact.tsx`, `Icon.tsx` + `icon.ts` (the `view.icon` primitive renderer), `portLayout.tsx`, `ports.ts` (wire rules for causal and acausal/Modelica connectors), `wireSnap.tsx`, `wireRouting.ts` |
+| Scope and instruments | `Dashboard.tsx`, `dashboardLayout.ts` |
+| Shell | `Shell.tsx`, `Logo.tsx` |
+| Canvas utilities | `undo.ts`, `clipboard.ts`, `graphLayout.ts` |
+| Protocol types | `protocol.ts`, **generated** from `paperboat/protocol/schema/paperboat-0.schema.json` by `python3 protocol/gen_ts.py` in the `paperboat` repo. Do not edit by hand. |
+
+It is a TypeScript-source package (`main` is `src/index.ts`); the consuming app's bundler compiles it.
+
+## Use
+
+Apps depend on a sibling checkout:
+
+```json
+"@paperboat/shared": "file:../paperboat-shared"
+```
+
+Run `npm install` here once so the kit's own dependencies exist. In the consuming app's Vite config
+add `resolve: { dedupe: ["react", "react-dom", "@xyflow/react"] }` so there is one React.
+
+```ts
+import { Compact, Shell } from "@paperboat/shared";
+import "@paperboat/shared/tokens.css";
+import "@paperboat/shared/plates.css";
+```
+
+Also exported: `@paperboat/shared/icon` and `@paperboat/shared/fixtures/icons` (icon test fixtures).
+
+## Develop
+
+```sh
+npm install
+npm run build   # typecheck
+npm test        # includes the view.icon token rule and the port rules
+```
+
+`test/fixtures/modelica/*.icon.json` are the Modelica importer goldens, copied from
+`paperboat/engine/tests/data/modelica/`; refresh them when the importer's output changes.
+
+## CI
+
+`.github/workflows/ci.yml` builds and tests here, then builds and tests `paperboat` (`apps/web`) and
+`squero-studio-om` against this checkout, so a breaking change shows up before it merges.

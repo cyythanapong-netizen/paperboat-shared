@@ -1,0 +1,60 @@
+# Build and test the kit, then check both consumers against this checkout.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared:
+    name: Shared (typecheck and tests)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  downstream:
+    name: Downstream (${{ matrix.app.name }})
+    needs: shared
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - { name: paperboat, repo: cyythanapong-netizen/paperboat, dir: paperboat/apps/web, ref: dev }
+          - { name: squero-studio-om, repo: cyythanapong-netizen/squero-studio-om, dir: squero-studio-om, ref: main }
+    steps:
+      # Side by side, so the apps' "file:../paperboat-shared" resolves to this checkout.
+      - uses: actions/checkout@v4
+        with:
+          path: paperboat-shared
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.app.repo }}
+          ref: ${{ matrix.app.ref }}
+          path: ${{ matrix.app.name }}
+          token: ${{ secrets.DOWNSTREAM_TOKEN || github.token }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: paperboat-shared
+      - run: npm install
+        working-directory: ${{ matrix.app.name == 'paperboat' && 'paperboat' || matrix.app.dir }}
+      - run: npm run typecheck
+        working-directory: ${{ matrix.app.dir }}
+      - run: npm test
+        working-directory: ${{ matrix.app.dir }}
+      - run: npm run build
+        working-directory: ${{ matrix.app.dir }}
