@@ -201,8 +201,9 @@ export function inForm(def: BlockDef, params: Record<string, ParamValue>): Block
       const names = parsePlaceholders(tmpl);
       out = { ...out, inputs: names.map((name) => ({ id: name, type: "any" })) };
     } else if (def.ports_from === "inputs" || typeof params[def.ports_from] === "number") {
-      const countVal = typeof params[def.ports_from] === "number" ? Number(params[def.ports_from]) : 2;
-      const count = Math.max(2, Math.min(26, Math.floor(countVal)));
+      const raw = params[def.ports_from] ?? def.params?.find((p) => p.id === def.ports_from)?.default;
+      const countVal = typeof raw === "number" ? Number(raw) : 2;
+      const count = Math.max(1, Math.min(26, Math.floor(countVal)));
       const proto = def.inputs[0] ?? { id: "a" };
       out = { ...out, inputs: Array.from({ length: count }, (_, i) => ({ ...proto, id: String.fromCharCode(97 + i) })) };
     } else {
