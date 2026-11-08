@@ -176,3 +176,8 @@
 
 /* A key as a pill: Ctrl+Z, Esc. */
 .kbd { font: 500 var(--size-2xs) var(--font-mono); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: var(--radius-sm); padding: 0 5px; margin: 0 1px; color: var(--text); background: var(--surface-raised); white-space: nowrap; }
+
+/* The view cube's Home key (viewCube.ts): round, a house, greyed while the view is already home. */
+.key.view-cube-home { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: var(--radius-round); transition: color var(--motion), border-color var(--motion), opacity var(--motion); }
+.view-cube-home svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.view-cube-home.at-home { color: var(--text-muted); border-color: var(--line); }
