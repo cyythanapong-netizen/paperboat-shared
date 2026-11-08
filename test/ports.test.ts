@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { connectError, connectorHint, iconEnd, inForm, netWireType, placeIconPorts, signalEnd } from "../src/ports.ts";
+import { connectError, connectorHint, hasIconPorts, iconEnd, inForm, netWireType, placeIconPorts, signalEnd } from "../src/ports.ts";
 import type { BlockDef, IconDef } from "../src/protocol.ts";
 import { connectors, Ground, Inertia, Resistor } from "./fixtures/icons.ts";
 
@@ -86,4 +86,16 @@ test("inForm with ports_from inputs allows 1 input port (pb#189)", () => {
   assert.deepEqual(resolved1.inputs.map((p) => p.id), ["a"]);
   const resolved3 = inForm(scopeDef, { inputs: 3 });
   assert.deepEqual(resolved3.inputs.map((p) => p.id), ["a", "b", "c"]);
+});
+
+test("hasIconPorts distinguishes icons with connector ports from curve icons without ports (pb#195)", () => {
+  assert.equal(hasIconPorts(Resistor), true);
+  assert.equal(hasIconPorts(Ground), true);
+  assert.equal(hasIconPorts(Inertia), true);
+  const curveIcon: IconDef = {
+    g: [{ p: [[20, 50], [80, 50]], stroke: "ink", t: "line", weight: "normal" }],
+  };
+  assert.equal(hasIconPorts(curveIcon), false);
+  assert.equal(hasIconPorts({ g: [], ports: [] }), false);
+  assert.equal(hasIconPorts(undefined), false);
 });

@@ -62,7 +62,7 @@ export {
   parseInputs,
   parseNames,
   inForm,
-  connectError, signalEnd, iconEnd, placeIconPorts, connectorHint, netWireType,
+  connectError, signalEnd, iconEnd, hasIconPorts, placeIconPorts, connectorHint, netWireType,
   type WireEnd, type PlacedIconPort,
 } from "./ports.ts";
 export {

@@ -263,6 +263,10 @@ export type PlacedIconPort = { port: IconPort; at: number; hidden: boolean; coun
 
 const truthy = (v: ParamValue | undefined) => v !== undefined && v !== false && v !== 0 && v !== "" && v !== "false";
 
+/** Whether a block's view.icon declares explicit connector ports; if absent, compact plates use signal ports. */
+export const hasIconPorts = (icon: IconDef | undefined): boolean =>
+  Boolean(icon?.ports && icon.ports.length > 0);
+
 /**
  * An icon's ports as its params make them. A port whose `if` param is false is hidden and the
  * others on its side re-spread evenly; its wires stay (drawn as missing). An `array` port is one

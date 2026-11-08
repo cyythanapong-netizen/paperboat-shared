@@ -102,7 +102,7 @@
 .pill-text { display: inline-grid; justify-items: start; }
 .pill-text > * { grid-area: 1 / 1; }
 .pill-text > [aria-hidden] { visibility: hidden; }
-.key.icon-key { width: 28px; padding: 0; display: inline-grid; place-items: center; }
+.key.small.icon-key, .key.icon-key { width: 28px; padding: 0; display: inline-grid; place-items: center; }
 .icon-key svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.2; }
 .icon-key svg .fill { fill: currentColor; stroke: none; opacity: 0.45; }
 .key.small.err { color: var(--danger); border-color: var(--danger); }
