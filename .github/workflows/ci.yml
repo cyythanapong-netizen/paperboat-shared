@@ -32,8 +32,8 @@ jobs:
       fail-fast: false
       matrix:
         app:
-          - { name: paperboat, repo: cyythanapong-netizen/paperboat, dir: paperboat/apps/web, ref: dev }
-          - { name: squero-studio-om, repo: cyythanapong-netizen/squero-studio-om, dir: squero-studio-om, ref: main }
+          - { name: paperboat, repo: paperboatlab/paperboat, dir: paperboat/apps/web, ref: dev }
+          - { name: squero-studio-om, repo: paperboatlab/squero-studio-om, dir: squero-studio-om, ref: main }
     steps:
       # Side by side, so the apps' "file:../paperboat-shared" resolves to this checkout.
       - uses: actions/checkout@v4
