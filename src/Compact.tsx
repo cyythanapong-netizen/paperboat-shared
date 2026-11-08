@@ -3,7 +3,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { isRef } from "./bindings.ts";
 import { Icon } from "./Icon.tsx";
 import { iconValid, plateSize } from "./icon.ts";
-import { connectorHint, hasIconPorts, placeIconPorts, portHint, portLabel, signOf } from "./ports.ts";
+import { connectorHint, hasIconPorts, placeIconPorts, placePorts, portHint, portLabel, SIDES, signOf, type PortSides } from "./ports.ts";
 import type { BlockDef, Connectors, IconDef, ParamValue } from "./protocol.ts";
 import { PortHandle } from "./wireSnap.tsx";
 
@@ -35,6 +35,7 @@ export function captionValue(template: string | undefined, params: Record<string
 export function CompactBlock({
   id,
   def,
+  sides,
   params,
   selected,
   commented,
@@ -47,6 +48,7 @@ export function CompactBlock({
 }: {
   id: string;
   def: BlockDef;
+  sides?: PortSides;
   params: Record<string, ParamValue>;
   selected: boolean;
   commented?: boolean;
@@ -83,6 +85,7 @@ export function CompactBlock({
   const hasParams = def.params.length > 0;
   const icon = iconValid(def.view?.icon) ? def.view?.icon : undefined; // else the plain plate
   const size = icon ? plateSize(icon) : undefined;
+  const placedPorts = placePorts(def, sides);
   return (
     <div
       ref={root}
@@ -108,17 +111,46 @@ export function CompactBlock({
           <IconPorts icon={icon!} params={params} connectors={connectors} wires={wires} />
         ) : (
           <>
-            {def.inputs.map((p, i) => (
-              <PortHandle key={p.id} type="target" position={Position.Left} id={p.id} top={spread(def.inputs.length, i)} label={portLabel(p)} title={portHint(p)} className={`t-${p.type}`} />
-            ))}
-            {def.inputs.map((p, i) => signOf(def, params, i) && (
-              <span key={`sign-${p.id}`} className="plate-sign" style={{ top: spread(def.inputs.length, i) }} aria-hidden="true">
-                {signOf(def, params, i)}
-              </span>
-            ))}
-            {def.outputs.map((p, i) => (
-              <PortHandle key={p.id} type="source" position={Position.Right} id={p.id} top={spread(def.outputs.length, i)} label={portLabel(p)} title={portHint(p)} className={`t-${p.type}`} />
-            ))}
+            {SIDES.map((side) => {
+              const list = placedPorts[side];
+              const isVert = side === "left" || side === "right";
+              return (
+                <Fragment key={side}>
+                  {list.map((e, i) => {
+                    const coord = spread(list.length, i);
+                    const inputIdx = e.dir === "in" ? def.inputs.findIndex((p) => p.id === e.port.id) : -1;
+                    const sign = inputIdx >= 0 ? signOf(def, params, inputIdx) : "";
+                    const signStyle =
+                      side === "left"
+                        ? { left: 6, top: coord, transform: "translateY(-50%)" }
+                        : side === "right"
+                          ? { right: 6, top: coord, transform: "translateY(-50%)" }
+                          : side === "top"
+                            ? { top: 6, left: coord, transform: "translateX(-50%)" }
+                            : { bottom: 6, left: coord, transform: "translateX(-50%)" };
+                    return (
+                      <Fragment key={e.port.id}>
+                        <PortHandle
+                          type={e.dir === "in" ? "target" : "source"}
+                          position={SIDE_POSITION[side]}
+                          id={e.port.id}
+                          top={isVert ? coord : undefined}
+                          left={!isVert ? coord : undefined}
+                          label={portLabel(e.port)}
+                          title={portHint(e.port)}
+                          className={`t-${e.port.type}`}
+                        />
+                        {sign && (
+                          <span className="plate-sign" style={signStyle} aria-hidden="true">
+                            {sign}
+                          </span>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </Fragment>
+              );
+            })}
           </>
         )}
         {word === "running" && progress !== undefined && progress < 1 && <i className="plate-prog" style={{ width: `${progress * 100}%` }} />}

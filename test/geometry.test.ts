@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { rotateIcon, rotateSideCW, rotateSideCCW, flipSideX, flipSideY } from "../src/geometry.ts";
+import { rotateIcon, rotateSideCW, rotateSideCCW, flipSideX, flipSideY, rotatePlacement, flipPlacement } from "../src/geometry.ts";
 import type { IconDef } from "../src/protocol.ts";
 
 test("geometry: rotateSideCW and CCW cycle port sides correctly", () => {
@@ -62,3 +62,28 @@ test("geometry: rotateIcon rotates graphics and ports", () => {
   assert.equal(vertFlipped.ports?.[0].side, "bottom");
   assert.equal(vertFlipped.ports?.[1].side, "top");
 });
+
+test("geometry: rotatePlacement and flipPlacement maintain D4 symmetry group consistency", () => {
+  // Rotate CW cycles 0 -> 270 -> 180 -> 90 -> 0 (in Modelica CCW deg)
+  assert.deepEqual(rotatePlacement({ rotation: 0 }, true), { rotation: 270, mirror: false });
+  assert.deepEqual(rotatePlacement({ rotation: 270 }, true), { rotation: 180, mirror: false });
+  assert.deepEqual(rotatePlacement({ rotation: 180 }, true), { rotation: 90, mirror: false });
+  assert.deepEqual(rotatePlacement({ rotation: 90 }, true), { rotation: 0, mirror: false });
+
+  // Rotate CCW cycles 0 -> 90 -> 180 -> 270 -> 0
+  assert.deepEqual(rotatePlacement({ rotation: 0 }, false), { rotation: 90, mirror: false });
+  assert.deepEqual(rotatePlacement({ rotation: 90 }, false), { rotation: 180, mirror: false });
+
+  // Flip horizontal (axis x)
+  assert.deepEqual(flipPlacement({ rotation: 0, mirror: false }, "x"), { rotation: 0, mirror: true });
+  assert.deepEqual(flipPlacement({ rotation: 180, mirror: false }, "x"), { rotation: 180, mirror: true });
+  assert.deepEqual(flipPlacement({ rotation: 90, mirror: false }, "x"), { rotation: 270, mirror: true });
+  assert.deepEqual(flipPlacement({ rotation: 270, mirror: false }, "x"), { rotation: 90, mirror: true });
+
+  // Flip vertical (axis y)
+  assert.deepEqual(flipPlacement({ rotation: 0, mirror: false }, "y"), { rotation: 180, mirror: true });
+  assert.deepEqual(flipPlacement({ rotation: 180, mirror: false }, "y"), { rotation: 0, mirror: true });
+  assert.deepEqual(flipPlacement({ rotation: 90, mirror: false }, "y"), { rotation: 90, mirror: true });
+  assert.deepEqual(flipPlacement({ rotation: 270, mirror: false }, "y"), { rotation: 270, mirror: true });
+});
+
