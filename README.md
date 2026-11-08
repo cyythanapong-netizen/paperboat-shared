@@ -7,7 +7,7 @@ runtime or Modelica.
 | --- | --- |
 | Tokens, Geist fonts, light/dark | `src/tokens.css`, `src/plates.css` (plate, port, wire, menu rules) |
 | Controls and menus | `Menus.tsx`, `commands.ts`, `NumberField.tsx`, `Dock.tsx` |
-| Blocks and ports | `Compact.tsx`, `Icon.tsx` + `icon.ts` (the `view.icon` primitive renderer), `portLayout.tsx`, `ports.ts` (wire rules for causal and acausal/Modelica connectors), `wireSnap.tsx`, `wireRouting.ts` |
+| Blocks and ports | `Compact.tsx`, `Icon.tsx` + `icon.ts` (the `view.icon` primitive renderer), `portLayout.tsx`, `ports.ts` (wire rules for causal and acausal/Modelica connectors), `wireSnap.tsx`, `wireRouting.ts` (square routes, both canvases), `wireBends.tsx` (draggable wire segments) |
 | Scope and instruments | `Dashboard.tsx`, `dashboardLayout.ts` |
 | Shell | `Shell.tsx`, `Logo.tsx` |
 | Canvas utilities | `undo.ts`, `clipboard.ts`, `graphLayout.ts` |

@@ -329,6 +329,8 @@ export type GraphEdge = {
   from: [string, string];
   /** [node, port] */
   to: [string, string];
+  /** The wire's bends on the canvas, [x, y] each, from the source end to the target end; a wire without them is routed automatically. Saved in a project; backends ignore it. */
+  points?: [number, number][];
 };
 
 /** How one instrument draws, kept in the Board layout (it changes during a run without a graph edit and saves with the project). The shape is the instrument's own, defined by the toolkit that provides it; the engine and the app only carry it. */
