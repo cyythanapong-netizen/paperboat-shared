@@ -11,3 +11,4 @@ export * from "./Dashboard.tsx";
 export * from "./Icon.tsx";
 export * from "./wireBends.tsx";
 export * from "./CanvasHelp.tsx";
+export * from "./Console.tsx";
