@@ -3,7 +3,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { isRef } from "./bindings.ts";
 import { Icon } from "./Icon.tsx";
 import { iconValid, plateSize } from "./icon.ts";
-import { connectorHint, placeIconPorts, portHint, portLabel, signOf } from "./ports.ts";
+import { connectorHint, hasIconPorts, placeIconPorts, portHint, portLabel, signOf } from "./ports.ts";
 import type { BlockDef, Connectors, IconDef, ParamValue } from "./protocol.ts";
 import { PortHandle } from "./wireSnap.tsx";
 
@@ -104,8 +104,8 @@ export function CompactBlock({
         }}
       >
         {icon ? <Icon icon={icon} type={def.type} fill={(t) => captionValue(t, params)} /> : <Glyph name={glyphName} />}
-        {icon ? (
-          <IconPorts icon={icon} params={params} connectors={connectors} wires={wires} />
+        {hasIconPorts(icon) ? (
+          <IconPorts icon={icon!} params={params} connectors={connectors} wires={wires} />
         ) : (
           <>
             {def.inputs.map((p, i) => (
