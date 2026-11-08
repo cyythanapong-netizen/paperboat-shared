@@ -92,3 +92,32 @@ export function flipSideY(side: Side): Side {
   if (side === "bottom") return "top";
   return side;
 }
+
+/**
+ * Computes the new placement (rotation and mirror) after rotating 90° clockwise or counter-clockwise.
+ */
+export function rotatePlacement(place: PlacementTransform, cw: boolean): { rotation: RotationDeg; mirror: boolean } {
+  const currentRot = place.rotation ?? 0;
+  const currentMirror = Boolean(place.mirror);
+  const step = cw ? 270 : 90;
+  const nextRot = (((currentRot + step) % 360) as RotationDeg);
+  return { rotation: nextRot, mirror: currentMirror };
+}
+
+/**
+ * Computes the new placement (rotation and mirror) after flipping horizontally or vertically in screen space.
+ * Maintains full consistency with the D4 dihedral group transform used in rotateIcon.
+ */
+export function flipPlacement(place: PlacementTransform, axis: "x" | "y"): { rotation: RotationDeg; mirror: boolean } {
+  const currentRot = place.rotation ?? 0;
+  const currentMirror = Boolean(place.mirror);
+  const isOrthogonal = currentRot === 90 || currentRot === 270;
+  if (axis === "x") {
+    const nextRot = (isOrthogonal ? (currentRot + 180) % 360 : currentRot) as RotationDeg;
+    return { rotation: nextRot, mirror: !currentMirror };
+  } else {
+    const nextRot = (!isOrthogonal ? (currentRot + 180) % 360 : currentRot) as RotationDeg;
+    return { rotation: nextRot, mirror: !currentMirror };
+  }
+}
+

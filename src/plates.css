@@ -41,6 +41,10 @@
 .port-tip { display: none; position: absolute; top: 50%; transform: translateY(-50%); padding: 0 6px; font: 400 var(--size-2xs) / 18px var(--font-mono); color: var(--text); background: var(--surface-float); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur); border: 1px solid var(--line); border-radius: var(--radius-sm); white-space: nowrap; pointer-events: none; z-index: 5; }
 .port-tip.in { right: 14px; }
 .port-tip.out { left: 14px; }
+.react-flow__handle-left .port-tip { right: 14px; left: auto; top: 50%; bottom: auto; transform: translateY(-50%); }
+.react-flow__handle-right .port-tip { left: 14px; right: auto; top: 50%; bottom: auto; transform: translateY(-50%); }
+.react-flow__handle-top .port-tip { bottom: 14px; top: auto; left: 50%; right: auto; transform: translateX(-50%); }
+.react-flow__handle-bottom .port-tip { top: 14px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); }
 .react-flow__handle:hover .port-tip { display: block; }
 .react-flow__handle.t-image { border-style: dashed; }
 /* E1: its params in a popover under the plate; the only glass, like the Station's properties. */

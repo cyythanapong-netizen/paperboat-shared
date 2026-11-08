@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { connectError, connectorHint, hasIconPorts, iconEnd, inForm, netWireType, placeIconPorts, signalEnd } from "../src/ports.ts";
+import { connectError, connectorHint, hasIconPorts, iconEnd, inForm, netWireType, placeIconPorts, placePorts, signalEnd } from "../src/ports.ts";
 import type { BlockDef, IconDef } from "../src/protocol.ts";
 import { connectors, Ground, Inertia, Resistor } from "./fixtures/icons.ts";
 
@@ -99,3 +99,34 @@ test("hasIconPorts distinguishes icons with connector ports from curve icons wit
   assert.equal(hasIconPorts({ g: [], ports: [] }), false);
   assert.equal(hasIconPorts(undefined), false);
 });
+
+test("placePorts respects custom PortSides for rotated and flipped compact blocks", () => {
+  const blockDef: BlockDef = {
+    type: "number",
+    label: "Number",
+    kind: "function",
+    inputs: [{ id: "in", type: "signal" }],
+    outputs: [{ id: "out", type: "signal" }],
+    params: [],
+  };
+
+  // Default placement
+  const defPlacement = placePorts(blockDef, undefined);
+  assert.deepEqual(defPlacement.left.map((e) => e.port.id), ["in"]);
+  assert.deepEqual(defPlacement.right.map((e) => e.port.id), ["out"]);
+  assert.deepEqual(defPlacement.top, []);
+  assert.deepEqual(defPlacement.bottom, []);
+
+  // Flipped horizontal (left and right swapped)
+  const flippedH = placePorts(blockDef, { right: ["in"], left: ["out"] });
+  assert.deepEqual(flippedH.left.map((e) => e.port.id), ["out"]);
+  assert.deepEqual(flippedH.right.map((e) => e.port.id), ["in"]);
+
+  // Rotated 90° CW (left -> top, right -> bottom)
+  const rotatedCW = placePorts(blockDef, { top: ["in"], bottom: ["out"] });
+  assert.deepEqual(rotatedCW.top.map((e) => e.port.id), ["in"]);
+  assert.deepEqual(rotatedCW.bottom.map((e) => e.port.id), ["out"]);
+  assert.deepEqual(rotatedCW.left, []);
+  assert.deepEqual(rotatedCW.right, []);
+});
+
