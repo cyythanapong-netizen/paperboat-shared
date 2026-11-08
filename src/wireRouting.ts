@@ -1,4 +1,5 @@
 export type Side = "left" | "right" | "top" | "bottom";
+export type Point = [number, number];
 
 export type RouteInput = {
   id: string;
@@ -26,12 +27,12 @@ export type Obstacle = {
 export type WireRoute = {
   id: string;
   kind: "forward" | "back" | "step";
+  /** The drawn corners, port to port: every segment is horizontal or vertical. */
+  points: Point[];
   path: string;
   labelX: number;
   labelY: number;
 };
-
-export type WireRouteTarget = { id: string; y: number; handle?: string | null };
 
 const byText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -45,29 +46,6 @@ function byPort(wires: readonly RouteInput[], end: "source" | "target"): Map<str
     groups.set(key, list);
   }
   return groups;
-}
-
-/** Assign fan-out lanes in the same vertical order as their destinations. */
-export function orderWireRoutes(routes: readonly WireRouteTarget[]): Map<string, number> {
-  const ordered = [...routes].sort(
-    (a, b) => a.y - b.y || byText(a.handle ?? "", b.handle ?? "") || byText(a.id, b.id),
-  );
-  return new Map(ordered.map((route, lane) => [route.id, lane]));
-}
-
-/** Keep fan-out curves close, but give each one a distinct bend around the default curve. */
-export function fanOutCurvature(lane: number, count: number): number {
-  if (count <= 1) return 0.25;
-  return Math.max(0.12, 0.25 + (lane - (count - 1) / 2) * 0.1);
-}
-
-/** Use source and target ordering when both ends are crowded; otherwise use the crowded end. */
-export function wireCurvature(sourceLane: number, sourceCount: number, targetLane: number, targetCount: number): number {
-  const bends = [
-    ...(sourceCount > 1 ? [fanOutCurvature(sourceLane, sourceCount)] : []),
-    ...(targetCount > 1 ? [fanOutCurvature(targetLane, targetCount)] : []),
-  ];
-  return bends.length ? bends.reduce((sum, bend) => sum + bend, 0) / bends.length : 0.25;
 }
 
 /** Spacing between the horizontal tracks used by back-wires. */
@@ -110,25 +88,6 @@ export function roundedPolyline(points: readonly [number, number][], radius = 10
   return d;
 }
 
-/** Sample a cubic bezier curve into equidistant points along t in [0, 1]. */
-export function sampleCubicBezier(
-  p0: readonly [number, number],
-  p1: readonly [number, number],
-  p2: readonly [number, number],
-  p3: readonly [number, number],
-  samples = 20,
-): [number, number][] {
-  const result: [number, number][] = [];
-  for (let i = 0; i <= samples; i++) {
-    const t = i / samples;
-    const mt = 1 - t;
-    const x = mt ** 3 * p0[0] + 3 * mt ** 2 * t * p1[0] + 3 * mt * t ** 2 * p2[0] + t ** 3 * p3[0];
-    const y = mt ** 3 * p0[1] + 3 * mt ** 2 * t * p1[1] + 3 * mt * t ** 2 * p2[1] + t ** 3 * p3[1];
-    result.push([x, y]);
-  }
-  return result;
-}
-
 const DIR: Record<Side, [number, number]> = {
   right: [1, 0],
   left: [-1, 0],
@@ -136,20 +95,101 @@ const DIR: Record<Side, [number, number]> = {
   bottom: [0, 1],
 };
 
-const PERP: Record<Side, [number, number]> = {
-  right: [0, 1],
-  left: [0, 1],
-  top: [1, 0],
-  bottom: [1, 0],
-};
+/** How far a wire runs straight out of its port before it may turn. */
+const STUB = 16;
+const horizontal = (side: Side) => side === "left" || side === "right";
+
+/** Drop repeated corners and corners on a straight run (but keep a turn back). */
+export function simplify(points: readonly Point[]): Point[] {
+  const out: Point[] = [];
+  for (const p of points) {
+    if (out.length && out[out.length - 1][0] === p[0] && out[out.length - 1][1] === p[1]) continue;
+    if (out.length >= 2) {
+      const [a, b] = [out[out.length - 2], out[out.length - 1]];
+      const straight = (a[0] === b[0] && b[0] === p[0] && (b[1] - a[1]) * (p[1] - b[1]) >= 0) || (a[1] === b[1] && b[1] === p[1] && (b[0] - a[0]) * (p[0] - b[0]) >= 0);
+      if (straight) out.pop();
+    }
+    out.push([p[0], p[1]]);
+  }
+  return out;
+}
+
+/**
+ * A square route from a port on side `sSide` to one on `tSide`: out of each port by a stub,
+ * then one or two turns. `channel` is where the middle run sits (x for side ports, y for top
+ * and bottom); absent, halfway.
+ */
+// ponytail: no obstacle avoidance for forward wires; a wire may cross a block until dragged.
+export function orthoPoints(s: Point, sSide: Side, t: Point, tSide: Side, channel?: number): Point[] {
+  const [sd, td] = [DIR[sSide], DIR[tSide]];
+  const a: Point = [s[0] + sd[0] * STUB, s[1] + sd[1] * STUB];
+  const b: Point = [t[0] + td[0] * STUB, t[1] + td[1] * STUB];
+  let mid: Point[];
+  if (horizontal(sSide) === horizontal(tSide)) {
+    const k = horizontal(sSide) ? 0 : 1; // the axis the ports face along
+    const across = (m: number): Point[] => (k === 0 ? [[m, a[1]], [m, b[1]]] : [[a[0], m], [b[0], m]]);
+    const along = (m: number): Point[] => (k === 0 ? [[a[0], m], [b[0], m]] : [[m, a[1]], [m, b[1]]]);
+    if (sd[k] === td[k]) mid = across(sd[k] > 0 ? Math.max(a[k], b[k]) : Math.min(a[k], b[k])); // both face the same way
+    else if ((b[k] - a[k]) * sd[k] >= 0) mid = across(channel ?? (a[k] + b[k]) / 2); // facing each other
+    else mid = along((a[1 - k] + b[1 - k]) / 2); // facing away: cross over between them
+  } else {
+    mid = [horizontal(sSide) ? [b[0], a[1]] : [a[0], b[1]]];
+  }
+  return simplify([s, a, ...mid, b, t]);
+}
+
+/**
+ * A wire's drawn corners from its saved bends: the ports at each end and the bends between,
+ * the first and last bend turned square with the port they meet (a block moved since).
+ */
+export function squareUp(from: Point, bends: readonly Point[], to: Point): Point[] {
+  const mid = bends.map((b): Point => [b[0], b[1]]);
+  const fix = (b: Point, end: Point) => {
+    if (Math.abs(b[1] - end[1]) <= Math.abs(b[0] - end[0])) b[1] = end[1];
+    else b[0] = end[0];
+  };
+  if (mid.length) {
+    fix(mid[0], from);
+    fix(mid[mid.length - 1], to);
+  }
+  return [from, ...mid, to];
+}
+
+/**
+ * Segment `i` (points i to i+1) dragged to pass through `at`: it moves across itself, its
+ * neighbours stretch. A segment at a port gets a new corner there, so the port end stays put.
+ */
+export function dragSegment(points: readonly Point[], i: number, at: Point): Point[] {
+  const pts = points.map((p): Point => [p[0], p[1]]);
+  if (i < 0 || i >= pts.length - 1) return pts;
+  if (i === 0) {
+    pts.unshift([pts[0][0], pts[0][1]]);
+    i++;
+  }
+  if (i + 1 === pts.length - 1) pts.push([pts[pts.length - 1][0], pts[pts.length - 1][1]]);
+  const k = pts[i][1] === pts[i + 1][1] ? 1 : 0; // a horizontal run moves in y
+  pts[i][k] = pts[i + 1][k] = Math.round(at[k]);
+  return simplify(pts);
+}
+
+/** The middle of a route's longest segment: where its label (a delete button) goes. */
+export function middleOf(points: readonly Point[]): Point {
+  let best: Point = points[0];
+  let len = -1;
+  for (let i = 0; i + 1 < points.length; i++) {
+    const [p, q] = [points[i], points[i + 1]];
+    const d = Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]);
+    if (d > len) [best, len] = [[(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], d];
+  }
+  return best;
+}
 
 /**
  * Route all wires on the canvas in one deterministic pass:
- * 1. Forward signal wires get dedicated cubic beziers where fan-out and fan-in wires diverge
- *    immediately near ports and never cross each other unnecessarily.
- * 2. Back wires (loops) are assigned distinct horizontal tracks below all intermediate obstacles
+ * 1. Back wires (loops) are assigned distinct horizontal tracks below all intermediate obstacles
  *    and nested so shorter loops sit closer to blocks without overlapping.
- * 3. Step wires share clean orthogonal channels with distinct vertical stems.
+ * 2. Forward wires (signal and step) run square, out of each port then across; wires into one
+ *    port get distinct vertical channels.
  */
 export function routeWires(
   wires: readonly RouteInput[],
@@ -163,19 +203,8 @@ export function routeWires(
     (w.targetPosition ?? "left") === "left" &&
     w.tx < w.sx + 8;
 
-  const backWires: RouteInput[] = [];
-  const forwardStepWires: RouteInput[] = [];
-  const forwardSignalWires: RouteInput[] = [];
-
-  for (const w of wires) {
-    if (isBack(w)) {
-      backWires.push(w);
-    } else if (w.step) {
-      forwardStepWires.push(w);
-    } else {
-      forwardSignalWires.push(w);
-    }
-  }
+  const backWires = wires.filter(isBack);
+  const forwardWires = wires.filter((w) => !isBack(w));
 
   // --- Back-wires (loops) ---
   if (backWires.length > 0) {
@@ -232,114 +261,34 @@ export function routeWires(
         [w.tx - exitTarget, w.ty],
         [w.tx, w.ty],
       ];
-      const path = roundedPolyline(pts, 10);
+      const points = simplify(pts);
       results.set(w.id, {
         id: w.id,
         kind: "back",
-        path,
+        points,
+        path: roundedPolyline(points, 10),
         labelX: (w.sx + w.tx) / 2,
         labelY: below,
       });
     }
   }
 
-  // --- Forward step wires ---
-  if (forwardStepWires.length > 0) {
-    const byTarget = byPort(forwardStepWires, "target");
-
-    for (const list of byTarget.values()) {
-      list.sort((a, b) => a.sy - b.sy || byText(a.id, b.id));
-      const count = list.length;
-      list.forEach((w, lane) => {
-        const midX = (w.sx + w.tx) / 2;
-        const channelOffset = count > 1 ? (lane - (count - 1) / 2) * 12 : 0;
-        const channelX = Math.max(w.sx + 16, Math.min(w.tx - 16, midX + channelOffset));
-        const pts: [number, number][] = [
-          [w.sx, w.sy],
-          [channelX, w.sy],
-          [channelX, w.ty],
-          [w.tx, w.ty],
-        ];
-        const path = roundedPolyline(pts, 8);
-        results.set(w.id, {
-          id: w.id,
-          kind: "step",
-          path,
-          labelX: channelX,
-          labelY: (w.sy + w.ty) / 2,
-        });
-      });
-    }
-  }
-
-  // --- Forward signal wires ---
-  if (forwardSignalWires.length > 0) {
-    const bySource = byPort(forwardSignalWires, "source");
-    const sourceLaneMap = new Map<string, { lane: number; count: number }>();
-    for (const list of bySource.values()) {
-      list.sort((a, b) => a.ty - b.ty || byText(a.targetHandle ?? "", b.targetHandle ?? "") || byText(a.id, b.id));
-      const count = list.length;
-      list.forEach((w, lane) => sourceLaneMap.set(w.id, { lane, count }));
-    }
-
-    const byTarget = byPort(forwardSignalWires, "target");
-    const targetLaneMap = new Map<string, { lane: number; count: number }>();
-    for (const list of byTarget.values()) {
-      list.sort((a, b) => a.sy - b.sy || byText(a.sourceHandle ?? "", b.sourceHandle ?? "") || byText(a.id, b.id));
-      const count = list.length;
-      list.forEach((w, lane) => targetLaneMap.set(w.id, { lane, count }));
-    }
-
-    for (const w of forwardSignalWires) {
-      const sInfo = sourceLaneMap.get(w.id) ?? { lane: 0, count: 1 };
-      const tInfo = targetLaneMap.get(w.id) ?? { lane: 0, count: 1 };
-
-      const sPos = w.sourcePosition ?? "right";
-      const tPos = w.targetPosition ?? "left";
-
-      const dx = w.tx - w.sx;
-      const dist = Math.max(20, Math.abs(dx));
-
-      let h1 = Math.max(20, Math.min(dist * 0.75, dist * 0.45));
-      let sPerpOffset = 0;
-      if (sInfo.count > 1) {
-        const sCenter = (sInfo.count - 1) / 2;
-        const sLaneFrac = (sInfo.lane - sCenter);
-        h1 = Math.max(24, Math.min(dist * 0.8, dist * (0.42 + 0.08 * sLaneFrac)));
-        sPerpOffset = sLaneFrac * 6;
+  // --- Forward wires (signal and step): square, a channel per wire into a shared target ---
+  for (const list of byPort(forwardWires, "target").values()) {
+    list.sort((a, b) => a.sy - b.sy || byText(a.id, b.id));
+    const count = list.length;
+    list.forEach((w, lane) => {
+      const sSide = w.sourcePosition ?? "right";
+      const tSide = w.targetPosition ?? "left";
+      let channel: number | undefined;
+      if (sSide === "right" && tSide === "left" && count > 1) {
+        const midX = (w.sx + w.tx) / 2 + (lane - (count - 1) / 2) * 12;
+        channel = Math.max(w.sx + STUB, Math.min(w.tx - STUB, midX));
       }
-
-      let h2 = Math.max(20, Math.min(dist * 0.75, dist * 0.45));
-      let tPerpOffset = 0;
-      if (tInfo.count > 1) {
-        const tCenter = (tInfo.count - 1) / 2;
-        const tLaneFrac = (tInfo.lane - tCenter);
-        h2 = Math.max(24, Math.min(dist * 0.8, dist * (0.42 + 0.08 * tLaneFrac)));
-        tPerpOffset = tLaneFrac * 6;
-      }
-
-      const sDir = DIR[sPos] ?? [1, 0];
-      const sPerp = PERP[sPos] ?? [0, 1];
-      const tDir = DIR[tPos] ?? [-1, 0];
-      const tPerp = PERP[tPos] ?? [0, 1];
-
-      const cx1 = w.sx + sDir[0] * h1 + sPerp[0] * sPerpOffset;
-      const cy1 = w.sy + sDir[1] * h1 + sPerp[1] * sPerpOffset;
-      const cx2 = w.tx + tDir[0] * h2 + tPerp[0] * tPerpOffset;
-      const cy2 = w.ty + tDir[1] * h2 + tPerp[1] * tPerpOffset;
-
-      const path = `M ${w.sx},${w.sy} C ${cx1},${cy1} ${cx2},${cy2} ${w.tx},${w.ty}`;
-      const labelX = 0.125 * w.sx + 0.375 * cx1 + 0.375 * cx2 + 0.125 * w.tx;
-      const labelY = 0.125 * w.sy + 0.375 * cy1 + 0.375 * cy2 + 0.125 * w.ty;
-
-      results.set(w.id, {
-        id: w.id,
-        kind: "forward",
-        path,
-        labelX,
-        labelY,
-      });
-    }
+      const points = orthoPoints([w.sx, w.sy], sSide, [w.tx, w.ty], tSide, channel);
+      const [labelX, labelY] = middleOf(points);
+      results.set(w.id, { id: w.id, kind: w.step ? "step" : "forward", points, path: roundedPolyline(points, 8), labelX, labelY });
+    });
   }
 
   return results;

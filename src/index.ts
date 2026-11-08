@@ -67,17 +67,18 @@ export {
 } from "./ports.ts";
 export {
   type Side as WireSide,
+  type Point as WirePoint,
   type RouteInput,
   type Obstacle,
   type WireRoute,
-  type WireRouteTarget,
-  orderWireRoutes,
-  fanOutCurvature,
-  wireCurvature,
   backWireLaneOffset,
   backWireExitDistance,
   roundedPolyline,
-  sampleCubicBezier,
+  simplify as simplifyWire,
+  orthoPoints,
+  squareUp,
+  dragSegment,
+  middleOf as middleOfWire,
   routeWires,
 } from "./wireRouting.ts";
 export * from "./graphLayout.ts";

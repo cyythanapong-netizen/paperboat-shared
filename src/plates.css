@@ -112,3 +112,16 @@
 .switch .opt { transition: color var(--glide); }
 
 
+
+/* A movable wire segment's handle (wireBends.tsx): shown on the selected wire. */
+.wire-bend {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--line-ink);
+  background: var(--surface-raised);
+  pointer-events: all;
+}
+.wire-bend.ns { cursor: ns-resize; }
+.wire-bend.ew { cursor: ew-resize; }
+.wire-bend:hover { border-color: var(--signal); }
