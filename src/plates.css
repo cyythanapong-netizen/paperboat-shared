@@ -93,7 +93,18 @@
 
 .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--space-2); border: 0; background: none; font: var(--size-2xs) var(--font-mono); color: var(--text-muted); white-space: nowrap; }
 .chip i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--line-ink); background: var(--text); }
-.chip.conn-closed i, .chip.conn-connecting i { background: none; }
+.chip.pill { cursor: pointer; padding: 2px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface-raised); }
+.chip.pill:hover { border-color: var(--line-ink); color: var(--text); }
+.chip.busy i { background: none; }
+.chip.bad { color: var(--danger); }
+.chip.bad i { background: none; border-color: var(--danger); }
+/* every label in one grid cell: the pill is as wide as its widest label, whichever shows */
+.pill-text { display: inline-grid; }
+.pill-text > * { grid-area: 1 / 1; }
+.pill-text > [aria-hidden] { visibility: hidden; }
+.key.icon-key { width: 28px; padding: 0; display: inline-grid; place-items: center; }
+.icon-key svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.2; }
+.icon-key svg .fill { fill: currentColor; stroke: none; opacity: 0.45; }
 .key.small.err { color: var(--danger); border-color: var(--danger); }
 
 .bar { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-4); min-width: 0; }

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type JSX, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { Logo } from "./Logo.tsx";
 
 /**
@@ -57,6 +57,87 @@ export function Wordmark({ running = false }: { running?: boolean }) {
       <Logo height={24} running={running} />
       paperboat
     </span>
+  );
+}
+
+/** The theme in use: the user's pick, or the system's. Sets html[data-theme]. */
+export function useTheme(choice: Theme): "light" | "dark" {
+  const query = "(prefers-color-scheme: dark)";
+  const [system, setSystem] = useState<"light" | "dark">(() => (window.matchMedia?.(query).matches ? "dark" : "light"));
+  useEffect(() => {
+    const m = window.matchMedia?.(query);
+    if (!m) return;
+    const on = () => setSystem(m.matches ? "dark" : "light");
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  useEffect(() => {
+    if (choice === "auto") delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = choice;
+  }, [choice]);
+  return choice === "auto" ? system : choice;
+}
+
+const NEXT_THEME: Record<Theme, Theme> = { auto: "light", light: "dark", dark: "auto" };
+const THEME_GLYPH: Record<Theme, JSX.Element> = {
+  auto: (
+    <>
+      <circle cx="8" cy="8" r="5.5" />
+      <path d="M8 2.5a5.5 5.5 0 0 1 0 11z" className="fill" />
+    </>
+  ),
+  light: (
+    <>
+      <circle cx="8" cy="8" r="3" />
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3" />
+    </>
+  ),
+  dark: <path d="M13 9.5A5.5 5.5 0 1 1 6.5 3a4.5 4.5 0 0 0 6.5 6.5z" />,
+};
+
+/** The top bar's theme key: one click cycles auto → light → dark. */
+export function ThemeToggle({ theme, onTheme }: { theme: Theme; onTheme: (t: Theme) => void }) {
+  return (
+    <button
+      type="button"
+      className="key small icon-key"
+      aria-label={`Theme: ${theme}`}
+      title={`Theme: ${theme} (click for ${NEXT_THEME[theme]})`}
+      onClick={() => onTheme(NEXT_THEME[theme])}
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">{THEME_GLYPH[theme]}</svg>
+    </button>
+  );
+}
+
+/**
+ * A status pill (`● omc 1.27 · ready`). `labels` lists every text it may show: the pill keeps the
+ * widest one's room, so a status flipping between "checking" and "ready" never shoves the
+ * top bar's other keys left and right. `tone`: ok fills the dot, busy hollows it, bad is danger.
+ */
+export function StatusPill({
+  label,
+  labels,
+  tone,
+  title,
+  onClick,
+}: {
+  label: string;
+  labels: string[];
+  tone: "ok" | "busy" | "bad";
+  title?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button type="button" className={`chip pill ${tone}`} role="status" title={title} onClick={onClick}>
+      <i aria-hidden="true" />
+      <span className="pill-text">
+        {labels.map((l) => (
+          <span key={l} aria-hidden="true">{l}</span>
+        ))}
+        <span>{label}</span>
+      </span>
+    </button>
   );
 }
 
