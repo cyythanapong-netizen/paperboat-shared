@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { connectError, connectorHint, iconEnd, netWireType, placeIconPorts, signalEnd } from "../src/ports.ts";
-import type { IconDef } from "../src/protocol.ts";
+import { connectError, connectorHint, iconEnd, inForm, netWireType, placeIconPorts, signalEnd } from "../src/ports.ts";
+import type { BlockDef, IconDef } from "../src/protocol.ts";
 import { connectors, Ground, Inertia, Resistor } from "./fixtures/icons.ts";
 
 const end = (icon: IconDef, id: string) => iconEnd(icon.ports!.find((p) => p.id === id)!, connectors)!;
@@ -70,4 +70,20 @@ test("wire look follows the connector class; thermal is dashed, never red", () =
   assert.equal(netWireType(connectors.HeatPort_a), "net-12d");
   assert.equal(netWireType(connectors.RealInput), "signal");
   assert.match(connectorHint("p", { ...connectors.Pin, potential: [{ id: "v", unit: "V" }], flow: [{ id: "i", unit: "A" }] }), /^p\npotential: v \(V\)\nflow: i \(A\)$/);
+});
+
+test("inForm with ports_from inputs allows 1 input port (pb#189)", () => {
+  const scopeDef: BlockDef = {
+    type: "scope",
+    label: "Scope",
+    kind: "monitor",
+    inputs: [{ id: "a", type: "any" }, { id: "b", type: "any" }],
+    outputs: [],
+    params: [{ id: "inputs", type: "number", default: 2 }],
+    ports_from: "inputs",
+  };
+  const resolved1 = inForm(scopeDef, { inputs: 1 });
+  assert.deepEqual(resolved1.inputs.map((p) => p.id), ["a"]);
+  const resolved3 = inForm(scopeDef, { inputs: 3 });
+  assert.deepEqual(resolved3.inputs.map((p) => p.id), ["a", "b", "c"]);
 });
