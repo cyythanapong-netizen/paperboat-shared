@@ -87,4 +87,3 @@ export * from "./clipboard.ts";
 export * from "./icon.ts";
 export * from "./geometry.ts";
 export * from "./canvasHotkeys.ts";
-export * from "./CanvasHelp.tsx";
