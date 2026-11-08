@@ -22,7 +22,9 @@
     "@types/node": "^22.19.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "three": "^0.187.0",
+    "@types/three": "^0.187.0"
   },
   "exports": {
     ".": {
@@ -42,6 +44,18 @@
       "default": "./test/fixtures/icons.ts"
     },
     "./tokens.css": "./src/tokens.css",
-    "./plates.css": "./src/plates.css"
+    "./plates.css": "./src/plates.css",
+    "./viewCube": {
+      "types": "./src/viewCube.ts",
+      "default": "./src/viewCube.ts"
+    }
+  },
+  "peerDependencies": {
+    "three": ">=0.187.0"
+  },
+  "peerDependenciesMeta": {
+    "three": {
+      "optional": true
+    }
   }
 }
