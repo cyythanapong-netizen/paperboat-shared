@@ -1,4 +1,4 @@
-import type { DashboardLayout, ParamValue, ScopeSettings } from "./protocol.ts";
+import type { DashboardLayout, InstrumentSettings, ParamValue } from "./protocol.ts";
 import { readStored, writeStored } from "./storage.ts";
 
 export type Size = "compact" | "normal" | "large" | "xlarge";
@@ -12,9 +12,9 @@ export const SIZE_LABEL: Record<Size, string> = { compact: "S", normal: "M", lar
 /** Columns of the grid when a layout does not say. */
 export const DEFAULT_COLUMNS = 6;
 
-/** A readout is a card, a plot is read at a glance, a picture is studied. */
-export function defaultSize(kind: string): Size {
-  return kind === "display" || kind === "switch" ? "compact" : kind === "image" || kind === "scope" ? "large" : "normal";
+/** The size an instrument opens at when its monitor does not say (see `Monitor.size`). */
+export function defaultSize(m: Pick<Monitor, "size">): Size {
+  return m.size ?? "normal";
 }
 
 /** A monitor on the Flow canvas: what the grid needs to place its instrument. */
@@ -23,7 +23,11 @@ export type Monitor = {
   x: number;
   y: number;
   params?: Record<string, ParamValue>;
-  /** A scope's inputs, and what is wired into each ("plant.θ", its unit). */
+  /** The size its instrument opens at: the toolkit that provides the instrument says (a readout is a card, a plot is read at a glance, a picture is studied). Absent: normal. */
+  size?: Size;
+  /** Where it goes in the automatic order, lowest first (readouts, then pictures, then plots). Absent: last. */
+  order?: number;
+  /** Its inputs, and what is wired into each ("plant.θ", its unit). */
   inputs?: string[];
   sources?: Record<string, { label: string; unit?: string }>;
 };
@@ -32,7 +36,7 @@ type Deco = NonNullable<DashboardLayout["decorations"]>[number];
 export type DecoKind = Deco["kind"];
 
 /** An instrument on the grid. `tab` is its tab's name, "" when the layout has no tabs. */
-export type Placed = { block: string; size: Size; col: number; row: number; w: number; h: number; tab: string; scope?: ScopeSettings };
+export type Placed = { block: string; size: Size; col: number; row: number; w: number; h: number; tab: string; settings?: InstrumentSettings };
 
 /**
  * A decoration on the grid (a section, a separator, a label), by its place in the layout's
@@ -45,15 +49,13 @@ export type PlacedDeco = { index: number; kind: DecoKind; text: string; style: "
 /** A layout laid out on a grid of `columns`: what is drawn, and what an edit starts from. */
 export type Arranged = { columns: number; narrowed: boolean; tabs: string[]; instruments: Placed[]; decorations: PlacedDeco[] };
 
-const KIND_RANK: Record<string, number> = { display: 0, image: 1 };
-
 /**
- * The automatic order, which is where an instrument with no saved place goes: readouts,
- * then pictures, then plots; within a kind the Flow canvas, left to right, then top to
+ * The automatic order, which is where an instrument with no saved place goes: by the `order`
+ * its toolkit gives it (readouts, then pictures, then plots); within one the Flow canvas, left to right, then top to
  * bottom (a pipeline's stages read in order, and moving a block moves its instrument).
  */
 export function autoOrder(monitors: Record<string, Monitor>): string[] {
-  const rank = (n: string) => KIND_RANK[monitors[n].kind] ?? 2;
+  const rank = (n: string) => monitors[n].order ?? 2;
   return Object.keys(monitors).sort((a, b) => rank(a) - rank(b) || monitors[a].x - monitors[b].x || monitors[a].y - monitors[b].y);
 }
 
@@ -120,15 +122,16 @@ export function arrange(monitors: Record<string, Monitor>, layout: DashboardLayo
     const labels = decorations.filter((d) => d.tab === tab && takesCells(d.kind));
     const mine = [...saved.values()].filter((i) => tabOf(i.tab) === tab);
     const sized = (block: string) => {
-      const size = saved.get(block)?.size ?? defaultSize(monitors[block].kind);
+      const size = saved.get(block)?.size ?? defaultSize(monitors[block]);
       return { size, w: Math.min(CELLS[size][0], columns), h: CELLS[size][1] };
     };
     const putInstrument = (block: string, c: number, r: number) => {
       const { size, w, h } = sized(block);
       const [col, row] = spot(c, r, w, h);
       claim(col, row, w, h);
-      const scope = saved.get(block)?.scope;
-      instruments.push({ block, size, col, row, w, h, tab, ...(scope ? { scope } : {}) });
+      const entry = saved.get(block);
+      const settings = entry?.settings ?? (entry as { scope?: InstrumentSettings } | undefined)?.scope; // `scope` is what layouts saved before settings were generic called it
+      instruments.push({ block, size, col, row, w, h, tab, ...(settings ? { settings } : {}) });
     };
     if (!narrowed) {
       for (const l of labels) claim(l.col, l.row, l.w, l.h); // a label is where it says, and takes its cells
@@ -181,7 +184,7 @@ export function layoutOf(a: Arranged, first?: string): DashboardLayout {
     size: p.size,
     ...(p.col >= 0 ? { at: [p.col, p.row] as [number, number] } : {}),
     ...(tabbed ? { tab: p.tab } : {}),
-    ...(p.scope ? { scope: p.scope } : {}),
+    ...(p.settings ? { settings: p.settings } : {}),
   }));
   const lead = instruments.findIndex((i) => i.block === first);
   if (lead > 0) instruments.unshift(...instruments.splice(lead, 1));
@@ -204,13 +207,13 @@ export function layoutOf(a: Arranged, first?: string): DashboardLayout {
   };
 }
 
-/** The layout with a Scope's settings (#37) changed; `undefined` drops them. */
-export function setScope(a: Arranged, block: string, scope: ScopeSettings | undefined): DashboardLayout {
+/** The layout with an instrument's own settings changed; `undefined` or none drops them. */
+export function setSettings(a: Arranged, block: string, settings: InstrumentSettings | undefined): DashboardLayout {
   return edit(a, (m) => {
     const p = m.instruments.find((i) => i.block === block);
     if (!p) return;
-    if (scope && Object.keys(scope).length) p.scope = scope;
-    else delete p.scope;
+    if (settings && Object.keys(settings).length) p.settings = settings;
+    else delete p.settings;
   });
 }
 
