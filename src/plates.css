@@ -164,3 +164,15 @@
 .logs li:hover .log-copy, .logs .log-copy:focus-visible { visibility: visible; }
 .logs .log-copy:hover { color: var(--text-on-screen); border-color: var(--text-on-screen); }
 .console-window .logs { background: var(--surface-screen); color: var(--text-on-screen); }
+
+/* The run dock (#78): glass, floating at the bottom middle of the surface it runs (its parent is positioned). */
+.dock {
+  position: absolute; left: 50%; bottom: var(--space-4); transform: translateX(-50%); z-index: 6;
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3);
+  max-width: calc(100% - 24px); white-space: nowrap;
+  background: var(--surface-float); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
+}
+
+/* A key as a pill: Ctrl+Z, Esc. */
+.kbd { font: 500 var(--size-2xs) var(--font-mono); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: var(--radius-sm); padding: 0 5px; margin: 0 1px; color: var(--text); background: var(--surface-raised); white-space: nowrap; }
