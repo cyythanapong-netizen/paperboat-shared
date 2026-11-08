@@ -181,3 +181,29 @@
 .key.view-cube-home, .key.small.view-cube-home { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: var(--radius-round); transition: color var(--motion), border-color var(--motion), opacity var(--motion); }
 .view-cube-home svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
 .view-cube-home.at-home { color: var(--text-muted); border-color: var(--line); }
+
+/* ---- Solver settings (SolverSettings.tsx): solvers by family on the left, options by group. */
+.console-window.solver-settings { width: min(760px, calc(100vw - 32px)); height: auto; max-height: calc(100vh - 80px); }
+.solver-body { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; min-height: 0; overflow: hidden; }
+.solver-list { overflow: auto; padding: var(--space-3); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: var(--space-3); }
+.solver-intro, .solver-about { margin: 0; font-size: var(--size-xs); color: var(--text-muted); }
+.solver-family h3 { margin: 0 0 4px; font: 600 var(--size-2xs) var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+.solver-pick { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 6px 8px; text-align: left; background: transparent; border: 1px solid transparent; border-radius: var(--radius-md); cursor: pointer; color: var(--text); }
+.solver-pick:hover { border-color: var(--line); }
+.solver-pick.on { border-color: var(--line-ink); background: var(--surface-raised); }
+.solver-pick:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.solver-name { font: 600 var(--size-xs) var(--font-sans); display: flex; gap: 6px; align-items: center; }
+.solver-badge { font: 500 var(--size-2xs) var(--font-mono); color: var(--signal); }
+.solver-blurb { font-size: var(--size-2xs); color: var(--text-muted); }
+.solver-options { overflow: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.solver-group { margin: 0; padding: var(--space-2) 0 0; border: 0; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.solver-group legend { padding: 0 6px 0 0; font: 600 var(--size-2xs) var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+.solver-field { display: grid; grid-template-columns: 1fr 120px auto; align-items: center; gap: 8px; }
+.solver-row { display: contents; }
+.solver-label { display: flex; flex-direction: column; font-size: var(--size-xs); }
+.solver-unit { color: var(--text-muted); }
+.solver-hint { font-size: var(--size-2xs); color: var(--text-muted); }
+.solver-field.changed .solver-label { font-weight: 600; }
+.solver-field .num { width: 100%; }
+.solver-undo:disabled { visibility: hidden; }
+.solver-foot { display: flex; justify-content: flex-end; gap: 8px; padding: var(--space-2) var(--space-3); border-top: 1px solid var(--line); }

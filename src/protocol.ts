@@ -233,7 +233,7 @@ export type ObjectDef = {
 /** One shape on the Station's scene. shape: box, sphere (size[0] = radius), line (pos to `to`), image (a size[0] x size[1] picture facing +z, from src). */
 export type Entity = {
   id: string;
-  shape: "box" | "sphere" | "line" | "image";
+  shape: "box" | "sphere" | "cylinder" | "line" | "image";
   pos: Vec3;
   size?: Vec3;
   /** Radians, applied in x, y, z order. */
@@ -251,6 +251,8 @@ export type View = {
   mode: "3d";
   /** Show the floor grid (default true). The user can switch it on or off on the Station page, and that choice wins. */
   grid?: boolean;
+  /** The height (y) of the floor grid (default 0): below a model that hangs from the origin. */
+  floor?: number;
   /** Where the camera opens, and where Home on the view cube returns it. Default: eye [2, 4, 8], looking at [0, 0, 0]. */
   camera?: {
     /** The camera's position. */
