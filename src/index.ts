@@ -22,7 +22,7 @@ export {
   arrange, arrange as arrangeLayout,
   rowsOf,
   layoutOf,
-  setScope,
+  setSettings,
   moveInstrument,
   resizeInstrument,
   moveToTab,
