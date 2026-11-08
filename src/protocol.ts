@@ -456,8 +456,23 @@ export type RunSettings = {
   dt?: number;
   /** Times real time (1: as the clock goes; 0: as fast as it can). */
   speed?: number;
-  /** The solver used for continuous integration. */
+  /** The run's solver: what a block or station object whose own solver is auto integrates with. */
   solver?: "rk4" | "rk45" | "rk2" | "euler" | "discrete";
+  /** The run's solver options (#196); each left out keeps the backend's. */
+  solver_options?: {
+    /** Relative tolerance (rk45). */
+    rtol?: number;
+    /** Absolute tolerance (rk45). */
+    atol?: number;
+    /** Smallest sub-step, s, before rk45 gives up (0: automatic). */
+    min_step?: number;
+    /** Largest rk45 sub-step, s (0: the clock step). */
+    max_step?: number;
+    /** rk45 sub-steps in one clock step before it gives up. */
+    max_steps?: number;
+    /** Fixed sub-steps per clock step (rk4, rk2, euler). */
+    sub_steps?: number;
+  };
 };
 
 /** A named, typed value (#36), used by reference in block params and station props. Exactly one of value and expr. */
