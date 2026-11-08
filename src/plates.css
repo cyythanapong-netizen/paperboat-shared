@@ -99,7 +99,7 @@
 .chip.bad { color: var(--danger); }
 .chip.bad i { background: none; border-color: var(--danger); }
 /* every label in one grid cell: the pill is as wide as its widest label, whichever shows */
-.pill-text { display: inline-grid; }
+.pill-text { display: inline-grid; justify-items: start; }
 .pill-text > * { grid-area: 1 / 1; }
 .pill-text > [aria-hidden] { visibility: hidden; }
 .key.icon-key { width: 28px; padding: 0; display: inline-grid; place-items: center; }
