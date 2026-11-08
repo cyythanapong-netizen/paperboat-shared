@@ -7,89 +7,12 @@ import { connectorHint, placeIconPorts, portHint, portLabel, signOf } from "./po
 import type { BlockDef, Connectors, IconDef, ParamValue } from "./protocol.ts";
 import { PortHandle } from "./wireSnap.tsx";
 
-/** Curves a glyph can name: the block's transfer in a few strokes. Anything else is drawn as text. */
-const CURVES: Record<string, ReactNode> = {
-  gain: (
-    <>
-      <path className="ax" d="M3 14H27" />
-      <path d="M5 24L25 6" />
-    </>
-  ),
-  plus: <path d="M15 6V24M6 15H24" />,
-  step: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M4 21H15V8H26" />
-    </>
-  ),
-  clamp: (
-    <>
-      <path className="ax" d="M3 15H27" />
-      <path d="M4 22H9L21 8H26" />
-    </>
-  ),
-  const: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M4 12H26" />
-    </>
-  ),
-  abs: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M5 8L15 22L25 8" />
-    </>
-  ),
-  staircase: (
-    <>
-      <path className="ax" d="M3 15H27" />
-      <path d="M4 23H11V16H18V9H25" />
-    </>
-  ),
-  window: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M4 22H9V10H21V22H26" />
-    </>
-  ),
-  pulse: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M4 22H8V10H14V22H18V10H24V22H26" />
-    </>
-  ),
-  timer: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M4 22H17V9H26" />
-      <path className="ax" strokeDasharray="2 2" d="M17 9V24" />
-    </>
-  ),
-  ramp: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M5 21L25 7" />
-      <circle cx="5" cy="21" r="1.5" />
-      <circle cx="25" cy="7" r="1.5" />
-    </>
-  ),
-  lerp: (
-    <>
-      <path className="ax" d="M3 24H27" />
-      <path d="M5 20L25 8" />
-      <circle cx="15" cy="14" r="2" fill="currentColor" />
-    </>
-  ),
-};
-
 export function Glyph({ name }: { name: string }) {
   return (
     <svg className="glyph" viewBox="0 0 30 30" aria-hidden="true">
-      {CURVES[name] ?? (
-        <text x="15" y="21" textAnchor="middle">
-          {name}
-        </text>
-      )}
+      <text x="15" y="21" textAnchor="middle">
+        {name}
+      </text>
     </svg>
   );
 }
