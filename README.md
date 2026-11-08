@@ -49,3 +49,9 @@ npm test        # includes the view.icon token rule and the port rules
 
 `.github/workflows/ci.yml` builds and tests here, then builds and tests `paperboat` (`apps/web`) and
 `squero-studio-om` against this checkout, so a breaking change shows up before it merges.
+
+## Versioning
+
+SemVer, tagged `vX.Y.Z[-alpha.N]`; `package.json` holds the number. It shares a MAJOR.MINOR line
+with `paperboat` (`0.1.x` pairs with `0.1.x`); a breaking change bumps MINOR. Consumers pin it by
+tag: `paperboat pkg install paperboat-shared@<version>`. Full rules: `paperboat/GUIDELINES.md` §9.
