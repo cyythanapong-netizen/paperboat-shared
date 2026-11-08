@@ -316,6 +316,8 @@ export type GraphNode = {
   /** Its place on the Flow canvas; backends ignore it. */
   pos?: [number, number];
   ports?: PortSides;
+  rotation?: 0 | 90 | 180 | 270;
+  mirror?: boolean;
   /** Whether the block is commented out or bypassed. */
   commented?: boolean;
   /** Comment mode: out (omitted from execution) or through (bypassed). */
