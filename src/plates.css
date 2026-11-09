@@ -57,11 +57,12 @@
 .react-flow__handle.ip-8 { width: 8px; height: 8px; }
 .react-flow__handle.ip-10 { width: 10px; height: 10px; }
 .react-flow__handle.ip-12 { width: 12px; height: 12px; }
-.react-flow__handle.ip-filled { background: var(--line-ink); }
+.react-flow__handle.ip-filled { background: var(--ip-color, var(--line-ink)); }
 .react-flow__handle.ip-circle, .react-flow__handle.ip-ring2 { border-radius: var(--radius-round); }
-.react-flow__handle.ip-ring2 { box-shadow: 0 0 0 2px var(--surface-raised), 0 0 0 3.5px var(--line-ink); }
-.react-flow__handle.ip-diamond { rotate: 45deg; }
-.react-flow__handle.ip-triangle { background: var(--line-ink); border: 0; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.react-flow__handle.ip-hollow { border-color: var(--ip-color, var(--line-ink)); }
+.react-flow__handle.ip-ring2 { border-color: var(--ip-color, var(--line-ink)); box-shadow: 0 0 0 2px var(--surface-raised), 0 0 0 3.5px var(--ip-color, var(--line-ink)); }
+.react-flow__handle.ip-diamond { border-color: var(--ip-color, var(--line-ink)); rotate: 45deg; }
+.react-flow__handle.ip-triangle { background: var(--ip-color, var(--line-ink)); border: 0; clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .react-flow__handle.ip-hidden { opacity: 0; pointer-events: none; }
 .ip-count { position: absolute; transform: translate(-50%, -50%); font: 500 var(--size-2xs) / 1 var(--font-mono); color: var(--text-muted); pointer-events: none; background: var(--surface-raised); padding: 0 2px; border-radius: var(--radius-sm); }
 .ip-count.side-left { left: 14px; } .ip-count.side-right { left: calc(100% - 14px); }

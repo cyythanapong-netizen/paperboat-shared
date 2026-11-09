@@ -1,5 +1,5 @@
 import { Handle, Position, useNodeId, type Connection, type ReactFlowState } from "@xyflow/react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, type CSSProperties } from "react";
 
 /**
  * How easily a wire finds a port (#52), in screen px; one place to tune it (#33).
@@ -73,6 +73,7 @@ export function PortHandle({
   left,
   label,
   title,
+  color,
 }: {
   type: "source" | "target";
   position: Position;
@@ -85,13 +86,23 @@ export function PortHandle({
   /** Shown on hover and read aloud: for a port with no name row beside it. */
   label?: string;
   title?: string;
+  /** The connector's own fill, for a port that keeps its class's design. */
+  color?: string;
 }) {
   const nodeId = useNodeId();
   const drag = useContext(WireDragContext);
   const state = !drag || !nodeId ? "" : drag.target?.nodeId === nodeId && drag.target.handleId === id ? "wire-target" : drag.accepts(nodeId, id, type) ? "" : "wire-dim";
   const why = state === "wire-dim" && drag && nodeId ? drag.why?.(nodeId, id, type) : null;
   return (
-    <Handle type={type} position={position} id={id} className={[className, state].filter(Boolean).join(" ")} style={top || left ? { top, left } : undefined} aria-label={label} title={why ?? title}>
+    <Handle
+      type={type}
+      position={position}
+      id={id}
+      className={[className, state].filter(Boolean).join(" ")}
+      style={{ ...(top || left ? { top, left } : {}), ...(color ? ({ "--ip-color": color } as CSSProperties) : {}) }}
+      aria-label={label}
+      title={why ?? title}
+    >
       {label && <span className={`port-tip ${type === "target" ? "in" : "out"}`}>{label}</span>}
     </Handle>
   );

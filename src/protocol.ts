@@ -157,6 +157,8 @@ export type ConnectorDef = {
   weight: 1.2 | 1.8 | 2;
   /** Thermal wires are dashed grey, not red. */
   dash?: "solid" | "dashed";
+  /** The connector's own fill, when a user-defined class gives one (#43). */
+  color?: string;
   potential?: {
     id: string;
     unit: string;
