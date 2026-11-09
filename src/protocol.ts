@@ -51,7 +51,7 @@ export type Stroke = "ink" | "muted" | "signal" | "electrical" | "translational"
 export type Weight = "thin" | "normal" | "wire";
 
 /** Never red: dashed red means missing only. */
-export type Dash = "solid" | "axis";
+export type Dash = "solid" | "axis" | "dash" | "dot" | "dashdot";
 
 /** none, --text, --surface-raised or --surface-sunken. */
 export type Fill = "none" | "ink" | "raised" | "sunken" | "electrical" | "translational" | "thermal" | "fluid" | "magnetic" | "rotational";
