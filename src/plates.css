@@ -165,6 +165,33 @@
 .logs .log-copy:hover { color: var(--text-on-screen); border-color: var(--text-on-screen); }
 .console-window .logs { background: var(--surface-screen); color: var(--text-on-screen); }
 
+/* ---- Messages: compiler errors, warnings and info as cards. ----------------------- */
+.messages { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.messages-filter { display: flex; align-items: center; min-height: 22px; }
+.messages-list { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+.msg {
+  display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: var(--space-2);
+  padding: 8px 10px; background: var(--surface-raised);
+  border: 1px solid var(--line); border-radius: var(--radius-md);
+}
+.msg.selectable { cursor: pointer; }
+.msg:hover { border-color: var(--line-strong); }
+.msg.sel { border-color: var(--line-ink); box-shadow: 0 0 0 1px var(--line-ink); }
+.msg-level { font: 500 11px var(--font-mono); text-align: right; padding-top: 1px; }
+.msg.error .msg-level { color: var(--danger); }
+.msg.warning .msg-level { color: var(--signal); }
+.msg.info .msg-level { color: var(--text-muted); }
+.msg-body { min-width: 0; }
+.msg-text { margin: 0; font: 400 var(--size-2xs) / 1.45 var(--font-sans); color: var(--text); }
+.msg-source {
+  display: inline-flex; align-items: center; margin-top: 4px; padding: 0; border: 0;
+  background: none; cursor: pointer; font: 400 11px var(--font-mono); color: var(--text-muted);
+  text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px;
+}
+.msg-source:hover { color: var(--text); }
+span.msg-source { cursor: default; }
+.msg-empty { margin: 0; padding: var(--space-3) 0; font: 400 var(--size-2xs) var(--font-sans); color: var(--text-muted); }
+
 /* The run dock (#78): glass, floating at the bottom middle of the surface it runs (its parent is positioned). */
 .dock {
   position: absolute; left: 50%; bottom: var(--space-4); transform: translateX(-50%); z-index: 6;

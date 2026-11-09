@@ -12,4 +12,6 @@ export * from "./Icon.tsx";
 export * from "./wireBends.tsx";
 export * from "./CanvasHelp.tsx";
 export * from "./Console.tsx";
+export * from "./messages.ts";
+export * from "./Messages.tsx";
 export * from "./SolverSettings.tsx";

@@ -4,13 +4,14 @@
 
 import { useEffect, useRef } from "react";
 
-export type MenuId = "file" | "edit" | "view" | "run";
+export type MenuId = "file" | "edit" | "view" | "model" | "run";
 
 /** The menus in the order they appear. A menu with no commands isn't shown. */
 export const MENUS: { id: MenuId; label: string }[] = [
   { id: "file", label: "File" },
   { id: "edit", label: "Edit" },
   { id: "view", label: "View" },
+  { id: "model", label: "Model" },
   { id: "run", label: "Run" },
 ];
 
