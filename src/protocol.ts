@@ -176,9 +176,6 @@ export type ConnectorDef = {
 /** Connector classes the blocks' icon ports refer to (§4), by Modelica class short name. */
 export type Connectors = Record<string, ConnectorDef>;
 
-/** What a sheet is (#9): a Signal flow (values flow one way), a Step flow (control passes along step wires), a State flow (transitions between states) or a Model flow (acausal physical connections). */
-export type FlowType = "signal" | "step" | "state" | "model";
-
 export type BlockDef = {
   type: string;
   label: string;
@@ -218,8 +215,6 @@ export type BlockDef = {
   feedthrough?: boolean;
   /** One line in plain words: what it does. Shown on its card in the block browser. Optional. */
   description?: string;
-  /** The flow types it works in (#9): the palette offers it only on a sheet of one of these, and the engine refuses it on another. Absent: every flow type. */
-  flows?: FlowType[];
 };
 
 /** A station object type: a thing on the Station page whose props are edited only there. */
@@ -237,10 +232,10 @@ export type ObjectDef = {
   description?: string;
 };
 
-/** One shape on the Station's scene. shape: box, sphere (size[0] = radius), line (pos to `to`), image (a size[0] x size[1] picture facing +z, from src). */
+/** One shape on the Station's scene. shape: box, sphere (size[0] = radius), cylinder (size[0] = radius, size[1] = length along y), line (pos to `to`), image (a size[0] x size[1] picture facing +z, from src) or mesh (triangles from vertices and indices, coloured by an optional field: values). */
 export type Entity = {
   id: string;
-  shape: "box" | "sphere" | "cylinder" | "line" | "image";
+  shape: "box" | "sphere" | "cylinder" | "line" | "image" | "mesh";
   pos: Vec3;
   size?: Vec3;
   /** Radians, applied in x, y, z order. */
@@ -251,6 +246,14 @@ export type Entity = {
   color?: string;
   /** An image's picture: a URL or a data: URL. */
   src?: string;
+  /** A mesh's vertices: x, y, z each, in the entity's own frame (pos, rot and scale place it). */
+  vertices?: number[];
+  /** A mesh's triangles: three vertex indices each, counter-clockwise seen from the front. */
+  indices?: number[];
+  /** A field over a mesh, one number per vertex, that the UI colours over range. */
+  values?: number[];
+  /** The values that take the low and high ends of the colour scale. */
+  range?: [number, number];
 };
 
 /** Camera hint sent with a scene. 2d: orthographic, looking down -z at center, height units tall. */
@@ -276,8 +279,6 @@ export type View = {
 };
 
 export type Graph = {
-  /** The sheet's flow type (#9): each block must work in it (inside a story, a Signal flow). Absent: not chosen; nothing is checked, and the UI takes a Step flow if a block has step ports, else a Signal flow. */
-  flow?: FlowType;
   nodes: GraphNode[];
   edges: GraphEdge[];
   groups?: GraphGroup[];
@@ -437,7 +438,7 @@ export type StationView = {
 /** A changed entity in scene.patch: its id and what changed. */
 export type EntityPatch = {
   id: string;
-  shape?: "box" | "sphere" | "line" | "image";
+  shape?: "box" | "sphere" | "cylinder" | "line" | "image" | "mesh";
   pos?: Vec3;
   size?: Vec3;
   /** Radians, applied in x, y, z order. */
@@ -448,6 +449,14 @@ export type EntityPatch = {
   color?: string;
   /** An image's picture: a URL or a data: URL. */
   src?: string;
+  /** A mesh's vertices: x, y, z each, in the entity's own frame (pos, rot and scale place it). */
+  vertices?: number[];
+  /** A mesh's triangles: three vertex indices each, counter-clockwise seen from the front. */
+  indices?: number[];
+  /** A field over a mesh, one number per vertex, that the UI colours over range. */
+  values?: number[];
+  /** The values that take the low and high ends of the colour scale. */
+  range?: [number, number];
 };
 
 /** One form of a magic block: the ports it has in that form (signal: computes; step: branches on a Step flow's path). The block's form param picks one. */
@@ -575,8 +584,6 @@ export type ServerMsg =
     run?: RunSettings;
     /** Available optional toolkits and their installed status on this machine. */
     toolkits?: ToolkitStatus[];
-    /** The flow types this backend offers (#9): what a sheet may be. Absent (an older backend): a Signal flow, and a Step flow if a block has step ports. */
-    flows?: FlowType[];
   }
   | {
     type: "catalog";
@@ -638,13 +645,6 @@ export type ServerMsg =
     status: RunStatus;
   }
   | {
-    type: "run.speed";
-    /** Times real time (1: as the clock goes; 0: as fast as it can), as RunSettings.speed. */
-    speed: number;
-    /** The run that took it (backend → UI only). */
-    run?: string;
-  }
-  | {
     type: "signal";
     node: string;
     t: number;
@@ -696,13 +696,6 @@ export type ClientMsg =
   }
   | {
     type: "run.cancel";
-  }
-  | {
-    type: "run.speed";
-    /** Times real time (1: as the clock goes; 0: as fast as it can), as RunSettings.speed. */
-    speed: number;
-    /** The run that took it (backend → UI only). */
-    run?: string;
   }
   | {
     type: "input";
