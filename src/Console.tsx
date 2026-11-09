@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDismiss } from "./dismiss.tsx";
 /** One Console line; `node` names the block it is about. */
 export type Log = { level: string; text: string; node?: string };
 type Logs = Log[];
@@ -71,8 +72,10 @@ export function ConsoleWindow({
   onBlock?: (id: string) => void;
   onClose: () => void;
 }) {
+  const root = useRef<HTMLElement>(null);
+  useDismiss(root, onClose);
   return (
-    <section className="console-window" role="dialog" aria-label="Console">
+    <section className="console-window" role="dialog" aria-label="Console" ref={root}>
       <header className="console-head">
         <h2>Console</h2>
         <span className="lbl">{`${logs.length} ${logs.length === 1 ? "line" : "lines"}${errors ? ` · ${errors} ${errors === 1 ? "error" : "errors"}` : ""}`}</span>

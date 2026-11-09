@@ -10,6 +10,7 @@ runtime or Modelica.
 | Blocks and ports | `Compact.tsx`, `Icon.tsx` + `icon.ts` (the `view.icon` primitive renderer), `portLayout.tsx`, `ports.ts` (wire rules for causal and acausal/Modelica connectors), `wireSnap.tsx`, `wireRouting.ts` (square routes, both canvases), `wireBends.tsx` (draggable wire segments) |
 | Scope and instruments | `Dashboard.tsx`, `dashboardLayout.ts` |
 | Shell | `Shell.tsx`, `Logo.tsx` |
+| Dismissal | `dismiss.tsx` (`useDismiss`, `useFocusReturn`): an outside press or Escape closes a floating surface, with a single layer stack for nested popovers |
 | Canvas utilities | `undo.ts`, `clipboard.ts`, `graphLayout.ts` |
 | Protocol types | `protocol.ts`, **generated** from `paperboat/protocol/schema/paperboat-0.schema.json` by `python3 protocol/gen_ts.py` in the `paperboat` repo. Do not edit by hand. |
 
@@ -33,6 +34,15 @@ import "@paperboat/shared/plates.css";
 ```
 
 Also exported: `@paperboat/shared/icon` and `@paperboat/shared/fixtures/icons` (icon test fixtures).
+
+## Dismissal
+
+A floating surface registers itself with `useDismiss(ref, onClose, options)`: a primary press
+outside `ref`, or Escape when it is the topmost surface, closes it. Pass `triggerRef` for the
+button that opened it so its click still toggles instead of closing and reopening. Nested
+surfaces close one at a time, topmost first. Alert dialogs pass `outside: false`; they then
+also shield the surfaces under them from outside presses. Drawers are panels, not popovers,
+and stay on their explicit toggle.
 
 ## Develop
 

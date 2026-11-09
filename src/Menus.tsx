@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { byMenu, describe, GROUP_TITLES, isEnabled, MENUS, rank, SEARCH_CHORD, type Command, type MenuId } from "./commands.ts";
-import { type RefObject } from "react";
-
-export function useFocusReturn(root?: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const before = document.activeElement as HTMLElement | null;
-    root?.current?.querySelector<HTMLElement>("button.run, button")?.focus();
-    return () => {
-      if (before?.isConnected) before.focus?.();
-    };
-  }, []);
-}
+import { useDismiss, useFocusReturn } from "./dismiss.tsx";
 
 /**
  * The menu bar (#78): one menu per `MenuId` that has commands. An ARIA menubar: Tab enters it once,
@@ -35,12 +25,10 @@ export function MenuBar({ commands, menuLabels }: { commands: Command[]; menuLab
   }, [open]);
 
   // A press outside closes.
-  useEffect(() => {
-    if (!open) return;
-    const down = (e: PointerEvent) => !root.current?.contains(e.target as Node) && setOpen(null);
-    window.addEventListener("pointerdown", down);
-    return () => window.removeEventListener("pointerdown", down);
-  }, [open]);
+  useDismiss(root, (reason) => {
+    setOpen(null);
+    if (reason === "escape") titles()[menus.findIndex((m) => m.id === open)]?.focus();
+  }, { enabled: open !== null });
 
   const openMenu = (id: MenuId, byKey: boolean) => {
     focusFirst.current = byKey;
@@ -83,14 +71,6 @@ export function MenuBar({ commands, menuLabels }: { commands: Command[]; menuLab
           e.preventDefault();
           const list = items();
           list[e.key === "Home" ? 0 : list.length - 1]?.focus();
-        }
-        break;
-      case "Escape":
-        if (open) {
-          e.preventDefault();
-          e.stopPropagation(); // closing a menu isn't also Escape for the canvas
-          setOpen(null);
-          titles()[ids.indexOf(here)]?.focus();
         }
         break;
       case "Tab":
@@ -173,11 +153,7 @@ export function CommandSearch({ commands, onClose }: { commands: Command[]; onCl
   const at = Math.min(index, Math.max(0, results.length - 1));
 
   useFocusReturn();
-  useEffect(() => {
-    const down = (e: PointerEvent) => !root.current?.contains(e.target as Node) && onClose();
-    window.addEventListener("pointerdown", down);
-    return () => window.removeEventListener("pointerdown", down);
-  }, [onClose]);
+  useDismiss(root, onClose);
   useEffect(() => {
     list.current?.children[at]?.scrollIntoView({ block: "nearest" });
   }, [at]);
@@ -195,10 +171,6 @@ export function CommandSearch({ commands, onClose }: { commands: Command[]; onCl
     } else if (e.key === "Enter") {
       e.preventDefault();
       choose(results[at]);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      e.stopPropagation();
-      onClose();
     }
   };
 
