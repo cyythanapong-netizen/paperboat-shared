@@ -45,7 +45,7 @@ export type ParamDef = {
 };
 
 /** ink = --text, muted = --line-strong, signal = --signal (live state only). */
-export type Stroke = "ink" | "muted" | "signal";
+export type Stroke = "ink" | "muted" | "signal" | "electrical" | "translational" | "thermal" | "fluid" | "magnetic" | "rotational";
 
 /** 1, 1.5 or 2 px. */
 export type Weight = "thin" | "normal" | "wire";
@@ -54,7 +54,7 @@ export type Weight = "thin" | "normal" | "wire";
 export type Dash = "solid" | "axis";
 
 /** none, --text, --surface-raised or --surface-sunken. */
-export type Fill = "none" | "ink" | "raised" | "sunken";
+export type Fill = "none" | "ink" | "raised" | "sunken" | "electrical" | "translational" | "thermal" | "fluid" | "magnetic" | "rotational";
 
 /** md = 5px. */
 export type Corner = "0" | "sm" | "md";
