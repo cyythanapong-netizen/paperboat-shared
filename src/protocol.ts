@@ -460,19 +460,21 @@ export type RunSettings = {
   dt?: number;
   /** Times real time (1: as the clock goes; 0: as fast as it can). */
   speed?: number;
-  /** The run's solver: what a block or station object whose own solver is auto integrates with. */
-  solver?: "rk4" | "rk45" | "rk2" | "euler" | "discrete";
+  /** The run's solver: what a block or station object whose own solver is auto integrates with. cvode and ida (implicit, for stiff systems) need an engine built with SUNDIALS. */
+  solver?: "rk4" | "rk45" | "rk2" | "euler" | "discrete" | "cvode" | "ida";
+  /** The solvers this engine has (solve::names()), the default first. In hello.run only: the UI offers these and hides the rest. */
+  solvers?: string[];
   /** The run's solver options (#196); each left out keeps the backend's. */
   solver_options?: {
-    /** Relative tolerance (rk45). */
+    /** Relative tolerance (rk45, cvode, ida). */
     rtol?: number;
-    /** Absolute tolerance (rk45). */
+    /** Absolute tolerance (rk45, cvode, ida). */
     atol?: number;
-    /** Smallest sub-step, s, before rk45 gives up (0: automatic). */
+    /** Smallest sub-step, s, before rk45, cvode or ida gives up (0: automatic). */
     min_step?: number;
-    /** Largest rk45 sub-step, s (0: the clock step). */
+    /** Largest rk45, cvode or ida sub-step, s (0: the clock step). */
     max_step?: number;
-    /** rk45 sub-steps in one clock step before it gives up. */
+    /** rk45, cvode or ida sub-steps in one clock step before it gives up. */
     max_steps?: number;
     /** Fixed sub-steps per clock step (rk4, rk2, euler). */
     sub_steps?: number;
