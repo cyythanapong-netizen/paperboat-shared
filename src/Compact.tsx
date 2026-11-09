@@ -30,7 +30,7 @@ export function captionValue(template: string | undefined, params: Record<string
  * A simple block as a small plate (#70): a glyph in a 64×56 box, bare port dots (a port's
  * name shows on hover), and the block's name and main value as a caption. Click opens its
  * params in a popover; double-click unfolds it into the full card (`onExpand`).
- * `word` is what is happening to it (running, failed), said in words and in the outline.
+ * `word` is what is happening to it (queued, running, cached, failed), said in words and in the outline.
  */
 export function CompactBlock({
   id,
@@ -52,7 +52,7 @@ export function CompactBlock({
   params: Record<string, ParamValue>;
   selected: boolean;
   commented?: boolean;
-  word?: "running" | "failed";
+  word?: "queued" | "running" | "cached" | "failed";
   progress?: number;
   onExpand: () => void;
   /** The param rows shown in the popover. */
