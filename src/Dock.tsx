@@ -39,7 +39,10 @@ export function Dock({
       </button>
       {optionsSlot}
       {controlsSlot}
-      {status && <span className={`run-status status-${status}`}>{statusText}</span>}
+      {/* The slot is always there, holding room for its widest label, so the keys beside it never move. */}
+      <span className={`run-status${status ? ` status-${status}` : ""}`} aria-live="polite" aria-atomic="true">
+        {status ? statusText : <span className="run-status-room" aria-hidden="true">running 000.0 / 000 s</span>}
+      </span>
     </div>
   );
 }
@@ -125,20 +128,20 @@ export function BackendWindow({
               <span className="val">{info?.protocol ?? "paperboat/0"}</span>
             </div>
             <div className="backend-grid-item">
-              <span className="lbl">Blocks Catalog</span>
-              <span className="val">{info?.blocksCount !== undefined ? `${info.blocksCount} blocks` : "–"}</span>
+              <span className="lbl">Blocks catalog</span>
+              <span className="val">{info?.blocksCount !== undefined ? `${info.blocksCount} ${info.blocksCount === 1 ? "block" : "blocks"}` : "–"}</span>
             </div>
             <div className="backend-grid-item">
               <span className="lbl">Station</span>
               <span className="val">
-                {info?.objectsCount !== undefined ? `${info.objectsCount} objects` : "–"}
+                {info?.objectsCount !== undefined ? `${info.objectsCount} ${info.objectsCount === 1 ? "object" : "objects"}` : "–"}
                 {info?.stationView ? ` · ${info.stationView}` : ""}
               </span>
             </div>
             <div className="backend-grid-item">
-              <span className="lbl">Solver Default</span>
+              <span className="lbl">Solver default</span>
               <span className="val">
-                {info?.solver ? info.solver.toUpperCase() : "–"}
+                {info?.solver ?? "–"}
                 {info?.dt ? ` (dt: ${info.dt}s${info.duration ? `, dur: ${info.duration}s` : ""})` : info?.duration ? ` (${info.duration}s)` : ""}
               </span>
             </div>

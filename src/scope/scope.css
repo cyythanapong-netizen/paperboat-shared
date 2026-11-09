@@ -18,7 +18,7 @@
 .scope-readout { display: flex; flex-wrap: wrap; gap: 2px 18px; padding: 4px 10px; border-top: 1px solid var(--screen-line); font: var(--size-2xs) var(--font-mono); color: var(--text-on-screen); font-variant-numeric: tabular-nums; }
 .instrument.scope figcaption { position: relative; align-items: center; justify-content: flex-start; }
 .scope-status { font-family: var(--font-mono); color: var(--text); }
-.scope-status.live, .scope-status.armed, .scope-status.triggered { color: var(--signal); }
+.scope-status.live, .scope-status.armed, .scope-status.triggered { color: var(--signal-text); }
 .scope-status.idle { color: var(--text-muted); }
 .scope-keys { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
 .scope-modes { display: inline-flex; gap: 2px; margin-right: 8px; }
