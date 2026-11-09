@@ -35,7 +35,9 @@
 .plate-prog { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--signal); border-radius: 0 0 0 4px; }
 .plate-cap { display: flex; gap: 5px; white-space: nowrap; font: 400 var(--size-2xs) var(--font-sans); color: var(--text-muted); }
 .plate-val { font-family: var(--font-mono); color: var(--text); border-bottom: 1px solid var(--line-strong); }
+.cap-queued { color: var(--text-muted); }
 .cap-running { color: var(--signal); font-weight: 500; }
+.cap-cached { color: var(--text-muted); font-weight: 500; }
 .cap-failed { color: var(--danger); font-weight: 500; }
 /* A port's name, on hover (P1); the handle's wire hit area stays 24px. */
 .port-tip { display: none; position: absolute; top: 50%; transform: translateY(-50%); padding: 0 6px; font: 400 var(--size-2xs) / 18px var(--font-mono); color: var(--text); background: var(--surface-float); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur); border: 1px solid var(--line); border-radius: var(--radius-sm); white-space: nowrap; pointer-events: none; z-index: 5; }

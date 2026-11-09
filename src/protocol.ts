@@ -433,8 +433,32 @@ export type ParamValue = number | boolean | string | {
 
 export type RunStatus = "done" | "failed" | "cancelled";
 
-/** What a run says about a block. A Step flow sends running (a path arrived) and done (it left); any run sends failed for the block at fault. */
-export type NodeState = "running" | "done" | "failed";
+/** What a run says about a block. A Step flow sends running (a path arrived) and done (it left); a run-once sends every block queued (waiting its turn in this run) before the first runs, then running and done, or cached for a block whose outputs it reused from an earlier run (never running); any run sends failed for the block at fault. */
+export type NodeState = "queued" | "running" | "done" | "cached" | "failed";
+
+/** What a monitor says about what it watches (a Lamp): ok, warn (near its limit) or trip (past it). */
+export type MonitorState = "ok" | "warn" | "trip";
+
+/** One shape of a frame, in the frame's coordinates (y up). line: open, through p; poly: closed, through p; circle: at p[0], radius r; text: s at p[0]. Styles are view.icon tokens (stroke ink by default, fill none), never colours. */
+export type FrameShape = {
+  t: "line" | "poly" | "circle" | "text";
+  p: [number, number][];
+  /** A circle's radius. */
+  r?: number;
+  /** A text's text. */
+  s?: string;
+  stroke?: "ink" | "muted" | "signal" | "danger";
+  fill?: "none" | "ink" | "raised" | "sunken" | "signal";
+};
+
+/** A small field image: w × h values row by row from the top (null: no value, such as a wall), drawn over the frame's view on a sequential scale from min to max (absent: the values' own range). At most 65536 cells. */
+export type FrameField = {
+  w: number;
+  h: number;
+  v: (number | null)[];
+  min?: number;
+  max?: number;
+};
 
 /** How the Station page shows the station: the built-in scene, a graph of station objects, or the backend's own page (web; page is its path on the backend's port). */
 export type StationView = {
@@ -680,6 +704,38 @@ export type ServerMsg =
     type: "node.progress";
     node: string;
     fraction: number;
+  }
+  | {
+    type: "metric";
+    node: string;
+    /** The series' name, one of the block's own. */
+    series: string;
+    /** The block's x (an iteration), or the series' next index (0, 1, 2…) when it gave none. */
+    x: number;
+    y: number;
+    /** y's unit. */
+    unit?: string;
+  }
+  | {
+    type: "monitor.state";
+    node: string;
+    state: MonitorState;
+    /** When it changed: the run clock (as a signal's t), for a marker on the scope. */
+    t: number;
+    /** The value that changed it (tripped it). */
+    v?: number;
+    /** The input it is about, for a monitor of several. Absent: in. */
+    port?: string;
+  }
+  | {
+    type: "frame";
+    node: string;
+    /** The run clock when it was drawn. */
+    t: number;
+    /** The area shown, [xmin, ymin, xmax, ymax], y up. Absent: what fits the shapes. */
+    view?: [number, number, number, number];
+    shapes?: FrameShape[];
+    field?: FrameField;
   }
   | {
     type: "log";
