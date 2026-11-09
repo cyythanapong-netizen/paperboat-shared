@@ -19,7 +19,7 @@ export const STROKE = {
   rotational: "var(--dom-rotational, var(--text))",
 } as const;
 export const WEIGHT = { thin: 1, normal: 1.5, wire: 2 } as const;
-export const DASH = { solid: "none", axis: "2 2" } as const;
+export const DASH = { solid: "none", axis: "2 2", dash: "5 3", dot: "1 2", dashdot: "5 2 1 2" } as const;
 export const FILL = {
   none: "none",
   ink: "var(--ink, var(--text))",
