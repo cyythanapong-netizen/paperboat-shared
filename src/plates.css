@@ -84,6 +84,14 @@
 .menu-title[aria-expanded="true"] { color: var(--text); font-weight: 600; border-color: var(--line-ink); background: none; }
 .menu, .cmd-search { background: var(--surface-panel); border: 1.5px solid var(--line-ink); border-radius: var(--radius-lg); box-shadow: 0 8px 22px rgb(0 0 0 / 0.16); }
 .menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 260px; padding: var(--space-1); }
+/* The command search floats at the top centre, over the bar, like a title-bar field. */
+.cmd-search { position: fixed; z-index: 60; top: var(--gutter); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 32px)); padding: var(--space-2); }
+.cmd-input { width: 100%; height: 34px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well-shadow); color: var(--text); font: 400 var(--size-sm) var(--font-sans); }
+.cmd-list { list-style: none; margin: var(--space-2) 0 0; padding: 0; max-height: min(360px, 60vh); overflow: auto; }
+.cmd-item { display: flex; justify-content: space-between; gap: var(--space-6); padding: 5px var(--space-3); border: 1.5px solid transparent; border-radius: var(--radius-sm); font-size: var(--size-sm); cursor: pointer; }
+.cmd-item.on { border-color: var(--line-ink); font-weight: 600; }
+.cmd-item[aria-disabled="true"] { color: var(--text-muted); opacity: 0.6; cursor: default; }
+.cmd-empty { padding: var(--space-3); color: var(--text-muted); }
 .menu-item { display: flex; justify-content: space-between; align-items: center; gap: var(--space-6); width: 100%; padding: 4px var(--space-3); border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font: 400 var(--size-sm) var(--font-sans); white-space: nowrap; }
 .menu-item:hover:not([aria-disabled="true"]) { background: var(--surface-sunken); }
 .menu-item:focus-visible { outline-offset: -2px; }
