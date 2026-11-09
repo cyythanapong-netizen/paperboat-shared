@@ -44,7 +44,7 @@ test("the scope imports only React and uPlot, so any app can mount it", () => {
     const src = fs.readFileSync(path.join(dir, file), "utf8");
     for (const m of src.matchAll(/^(import|export)\s+(type\s+)?[^;]*?from\s+"([^"]+)"/gms)) {
       const [, , type, from] = m;
-      const ok = from.startsWith("./") || ["react", "react/jsx-runtime", "uplot"].includes(from) || from.startsWith("uplot/") || (from === "@paperboat/host" && type);
+      const ok = from.startsWith("./") || ["react", "react/jsx-runtime", "uplot"].includes(from) || from.startsWith("uplot/") || (from === "../widget.ts" && type) || (from === "@paperboat/host" && type);
       assert.ok(ok, `${file} imports ${from}`);
     }
   }

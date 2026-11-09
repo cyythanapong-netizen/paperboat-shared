@@ -16,6 +16,7 @@ import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import { findTrigger, spectrum, toCsv, valueAt } from "./math.ts";
 import type { ScopeChannel as Channel, TapPort } from "./types.ts";
+import { scopeWidget } from "./widget.ts";
 import "./scope.css";
 
 export type ScopeMode = "time" | "xy" | "fft";
@@ -553,7 +554,15 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
   const tapList = (taps ?? []).filter((t) => t.label.toLowerCase().includes(tapQuery.toLowerCase()));
 
   return (
-    <figure className={`instrument scope${channels.length ? "" : " idle"}${small ? " small" : ""}`} data-version={version} tabIndex={0} onKeyDown={onKey} aria-label={`Scope ${name}`}>
+    <figure
+      className={`instrument scope${channels.length ? "" : " idle"}${small ? " small" : ""}`}
+      data-widget={scopeWidget.id}
+      data-widget-version={scopeWidget.version}
+      data-version={version}
+      tabIndex={0}
+      onKeyDown={onKey}
+      aria-label={`Scope ${name}`}
+    >
       <div className={`screen${cursors && mode === "time" && channels.length ? " with-readout" : ""}`}>
         {channels.length > 0 && (
           <div className="scope-legend" role="list">
