@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useDismiss } from "./dismiss.tsx";
 // RunOptions and VarControls are passed or slotted if needed
 export type DockProps = {
   canRun: boolean;
@@ -75,16 +76,13 @@ export function BackendWindow({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(url);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const root = useRef<HTMLElement>(null);
+  useDismiss(root, onClose);
 
   const presets = ["ws://localhost:8765", "ws://127.0.0.1:8765"];
 
   return (
-    <section className="console-window backend-window" role="dialog" aria-label="Backend" data-own-keys>
+    <section className="console-window backend-window" role="dialog" aria-label="Backend" data-own-keys ref={root}>
       <header className="console-head">
         <h2>Backend</h2>
         <span className={`lbl conn-${connection}`}>{connection === "open" ? `connected: ${engine || "ready"}` : connection}</span>

@@ -4,6 +4,8 @@ export * from "./wireSnap.tsx";
 export * from "./Logo.tsx";
 export * from "./NumberField.tsx";
 export * from "./Compact.tsx";
+export * from "./dismiss.ts";
+export * from "./dismiss.tsx";
 export * from "./Menus.tsx";
 export * from "./Shell.tsx";
 export * from "./Dock.tsx";

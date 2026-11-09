@@ -5,6 +5,7 @@
 
 import { useRef, useEffect } from "react";
 import { NumberField } from "./NumberField.tsx";
+import { useDismiss } from "./dismiss.tsx";
 
 export type SolverFamily = "explicit" | "adaptive" | "implicit" | "discrete";
 
@@ -74,6 +75,7 @@ export function SolverSettings({
 }) {
   const root = useRef<HTMLElement>(null);
   useEffect(() => root.current?.querySelector<HTMLElement>("[aria-checked=true]")?.focus(), []);
+  useDismiss(root, onClose);
   const chosen = solvers.find((s) => s.id === solver) ?? solvers[0];
   const shown = (chosen?.options ?? []).map((k) => options.find((o) => o.key === k)).filter((o): o is SolverOptionInfo => !!o);
   const groups = [...new Set(shown.map((o) => o.group))];
@@ -85,9 +87,6 @@ export function SolverSettings({
       aria-label={title}
       data-own-keys
       ref={root}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") e.preventDefault(), e.stopPropagation(), onClose();
-      }}
     >
       <header className="console-head">
         <h2>{title}</h2>

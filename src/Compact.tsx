@@ -1,6 +1,7 @@
 import { Position } from "@xyflow/react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { isRef } from "./bindings.ts";
+import { useDismiss } from "./dismiss.tsx";
 import { Icon } from "./Icon.tsx";
 import { iconValid, plateSize } from "./icon.ts";
 import { connectorHint, hasIconPorts, placeIconPorts, placePorts, portHint, portLabel, SIDES, signOf, type PortSides } from "./ports.ts";
@@ -67,17 +68,7 @@ export function CompactBlock({
   useEffect(() => {
     if (!selected) setOpen(false);
   }, [selected]);
-  useEffect(() => {
-    if (!open) return;
-    const away = (e: PointerEvent) => !root.current?.contains(e.target as globalThis.Node | null) && setOpen(false);
-    const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", key);
-    return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", key);
-    };
-  }, [open]);
+  useDismiss(root, () => setOpen(false), { enabled: open });
 
   const value = captionValue(def.view?.value, params);
   const glyphName = def.view?.glyph ? captionValue(def.view.glyph, params) : "const";

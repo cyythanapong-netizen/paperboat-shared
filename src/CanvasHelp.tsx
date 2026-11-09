@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
+import { useDismiss } from "./dismiss.tsx";
 
 /** What the canvas does with a pointer and keys, one line each. */
 export const CANVAS_GESTURES: [string, string][] = [
@@ -29,22 +30,7 @@ export function Keys({ text }: { text: string }) {
 export function CanvasHelp({ gestures = CANVAS_GESTURES }: { gestures?: [string, string][] }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.stopPropagation();
-      setOpen(false);
-    };
-    const onDown = (e: PointerEvent) => !box.current?.contains(e.target as globalThis.Node) && setOpen(false);
-    window.addEventListener("keydown", onKey, true);
-    window.addEventListener("pointerdown", onDown, true);
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("pointerdown", onDown, true);
-    };
-  }, [open]);
+  useDismiss(box, () => setOpen(false), { enabled: open });
 
   return (
     <div ref={box} className="nodrag">
