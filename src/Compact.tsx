@@ -193,7 +193,7 @@ function IconPorts({ icon, params, connectors, wires }: { icon: IconDef; params:
         return (
           <Fragment key={port.id}>
             {kinds.map((type) => (
-              <PortHandle key={type} type={type} position={SIDE_POSITION[port.side]} id={port.id} {...along} label={hidden ? undefined : port.id} title={title} className={look} />
+              <PortHandle key={type} type={type} position={SIDE_POSITION[port.side]} id={port.id} {...along} label={hidden ? undefined : port.id} title={title} className={look} color={c?.color} />
             ))}
             {count !== undefined && !hidden && (
               <span className={`ip-count side-${port.side}`} style={along} aria-hidden="true">
