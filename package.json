@@ -54,7 +54,11 @@
       "types": "./src/scope/index.ts",
       "default": "./src/scope/index.ts"
     },
-    "./scope.css": "./src/scope/scope.css"
+    "./scope.css": "./src/scope/scope.css",
+    "./widgets": {
+      "types": "./src/widgets.ts",
+      "default": "./src/widgets.ts"
+    }
   },
   "peerDependencies": {
     "three": ">=0.187.0"
