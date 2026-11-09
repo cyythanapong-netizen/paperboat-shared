@@ -627,6 +627,13 @@ export type ServerMsg =
     status: RunStatus;
   }
   | {
+    type: "run.speed";
+    /** Times real time (1: as the clock goes; 0: as fast as it can), as RunSettings.speed. */
+    speed: number;
+    /** The run that took it (backend → UI only). */
+    run?: string;
+  }
+  | {
     type: "signal";
     node: string;
     t: number;
@@ -678,6 +685,13 @@ export type ClientMsg =
   }
   | {
     type: "run.cancel";
+  }
+  | {
+    type: "run.speed";
+    /** Times real time (1: as the clock goes; 0: as fast as it can), as RunSettings.speed. */
+    speed: number;
+    /** The run that took it (backend → UI only). */
+    run?: string;
   }
   | {
     type: "input";
