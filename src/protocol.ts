@@ -176,6 +176,9 @@ export type ConnectorDef = {
 /** Connector classes the blocks' icon ports refer to (§4), by Modelica class short name. */
 export type Connectors = Record<string, ConnectorDef>;
 
+/** What a sheet is (#9): a Signal flow (values flow one way), a Step flow (control passes along step wires), a State flow (transitions between states) or a Model flow (acausal physical connections). */
+export type FlowType = "signal" | "step" | "state" | "model";
+
 export type BlockDef = {
   type: string;
   label: string;
@@ -215,6 +218,8 @@ export type BlockDef = {
   feedthrough?: boolean;
   /** One line in plain words: what it does. Shown on its card in the block browser. Optional. */
   description?: string;
+  /** The flow types it works in (#9): the palette offers it only on a sheet of one of these, and the engine refuses it on another. Absent: every flow type. */
+  flows?: FlowType[];
 };
 
 /** A station object type: a thing on the Station page whose props are edited only there. */
@@ -271,6 +276,8 @@ export type View = {
 };
 
 export type Graph = {
+  /** The sheet's flow type (#9): each block must work in it (inside a story, a Signal flow). Absent: not chosen; nothing is checked, and the UI takes a Step flow if a block has step ports, else a Signal flow. */
+  flow?: FlowType;
   nodes: GraphNode[];
   edges: GraphEdge[];
   groups?: GraphGroup[];
@@ -568,6 +575,8 @@ export type ServerMsg =
     run?: RunSettings;
     /** Available optional toolkits and their installed status on this machine. */
     toolkits?: ToolkitStatus[];
+    /** The flow types this backend offers (#9): what a sheet may be. Absent (an older backend): a Signal flow, and a Step flow if a block has step ports. */
+    flows?: FlowType[];
   }
   | {
     type: "catalog";
@@ -629,6 +638,13 @@ export type ServerMsg =
     status: RunStatus;
   }
   | {
+    type: "run.speed";
+    /** Times real time (1: as the clock goes; 0: as fast as it can), as RunSettings.speed. */
+    speed: number;
+    /** The run that took it (backend → UI only). */
+    run?: string;
+  }
+  | {
     type: "signal";
     node: string;
     t: number;
@@ -680,6 +696,13 @@ export type ClientMsg =
   }
   | {
     type: "run.cancel";
+  }
+  | {
+    type: "run.speed";
+    /** Times real time (1: as the clock goes; 0: as fast as it can), as RunSettings.speed. */
+    speed: number;
+    /** The run that took it (backend → UI only). */
+    run?: string;
   }
   | {
     type: "input";
