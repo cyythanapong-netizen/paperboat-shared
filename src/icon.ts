@@ -7,10 +7,31 @@ import type { IconDef, Prim } from "./protocol.ts";
  * and the plate falls back to today's glyph plate.
  */
 
-export const STROKE = { ink: "var(--ink, var(--text))", muted: "var(--line-strong)", signal: "var(--signal)" } as const;
+export const STROKE = {
+  ink: "var(--ink, var(--text))",
+  muted: "var(--line-strong)",
+  signal: "var(--signal)",
+  electrical: "var(--dom-electrical, var(--text))",
+  translational: "var(--dom-translational, var(--text))",
+  thermal: "var(--dom-thermal, var(--text))",
+  fluid: "var(--dom-fluid, var(--text))",
+  magnetic: "var(--dom-magnetic, var(--text))",
+  rotational: "var(--dom-rotational, var(--text))",
+} as const;
 export const WEIGHT = { thin: 1, normal: 1.5, wire: 2 } as const;
 export const DASH = { solid: "none", axis: "2 2" } as const;
-export const FILL = { none: "none", ink: "var(--ink, var(--text))", raised: "var(--surface-raised)", sunken: "var(--surface-sunken)" } as const;
+export const FILL = {
+  none: "none",
+  ink: "var(--ink, var(--text))",
+  raised: "var(--surface-raised)",
+  sunken: "var(--surface-sunken)",
+  electrical: "var(--dom-electrical, var(--text))",
+  translational: "var(--dom-translational, var(--text))",
+  thermal: "var(--dom-thermal, var(--text))",
+  fluid: "var(--dom-fluid, var(--text))",
+  magnetic: "var(--dom-magnetic, var(--text))",
+  rotational: "var(--dom-rotational, var(--text))",
+} as const;
 export const CORNER = { "0": 0, sm: 3, md: 5 } as const; // --radius-sm, --radius-md in px
 export const FONT = { sans: "var(--font-sans)", mono: "var(--font-mono)" } as const;
 export const SIZE = [12, 12.5, 13, 15, 30] as const;
