@@ -464,6 +464,8 @@ export type FrameField = {
 export type StationView = {
   view: "scene" | "graph" | "web";
   page?: string;
+  /** Whether the Station page is offered (default true). False hides it in every view mode; the user can still show it from View. */
+  visible?: boolean;
 };
 
 /** A changed entity in scene.patch: its id and what changed. */
