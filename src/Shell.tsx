@@ -15,7 +15,8 @@ export type Mode = "navigator" | "commander" | "lookout";
 export const MODES: Mode[] = ["navigator", "commander", "lookout"];
 export type Theme = "auto" | "light" | "dark";
 
-export const PAGES: { id: Page; label: string; hint: string }[] = [
+export type PageInfo = { id: Page; label: string; hint: string };
+export const PAGES: PageInfo[] = [
   { id: "station", label: "Station", hint: "The setup: what's being worked on" },
   { id: "flow", label: "Flow", hint: "The blocks and wires" },
   { id: "dashboard", label: "Board", hint: "Instruments during a run" },
@@ -267,10 +268,11 @@ const PAD = 8;
  * placed from the key's face (icon and name) plus room, so they never touch the name.
  * ↑/↓ and the wheel over the rail move between pages.
  */
-export function Rail({ page, onPage, hidden, allowedPages }: { page: Page; onPage: (p: Page) => void; hidden?: boolean; allowedPages?: string[] }) {
+export function Rail({ page, onPage, hidden, allowedPages, pages }: { page: Page; onPage: (p: Page) => void; hidden?: boolean; allowedPages?: string[]; pages?: PageInfo[] }) {
   const rail = useRef<HTMLElement>(null);
   const brackets = useRef<HTMLSpanElement[]>([]);
-  const visiblePages = allowedPages && allowedPages.length > 0 ? PAGES.filter((p) => allowedPages.includes(p.id)) : PAGES;
+  const offered = pages ?? PAGES;
+  const visiblePages = allowedPages && allowedPages.length > 0 ? offered.filter((p) => allowedPages.includes(p.id)) : offered;
   const at = Math.max(0, visiblePages.findIndex((p) => p.id === page));
   const was = useRef(-1);
   const onPageRef = useRef(onPage);
