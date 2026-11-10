@@ -251,13 +251,13 @@ export type Entity = {
   color?: string;
   /** An image's picture: a URL or a data: URL. */
   src?: string;
-  /** A mesh's vertices: x, y, z each, in the entity's own frame (pos, rot and scale place it). */
-  vertices?: number[];
-  /** A mesh's triangles: three vertex indices each, counter-clockwise seen from the front. */
-  indices?: number[];
-  /** A field over a mesh, one number per vertex, that the UI colours over range. */
-  values?: number[];
-  /** The values that take the low and high ends of the colour scale. */
+  /** A mesh's vertices: x, y, z each, in the entity's own frame (pos, rot and scale place it). Shape [n, 3], f32. */
+  vertices?: NumberArray;
+  /** A mesh's triangles: three vertex indices each, counter-clockwise seen from the front. Shape [m, 3], u32 (or i32, u8). */
+  indices?: NumberArray;
+  /** A field over a mesh, one number per vertex (a pressure, a stress), that the UI colours over range. Shape [n]. */
+  values?: NumberArray;
+  /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
 };
 
@@ -482,13 +482,13 @@ export type EntityPatch = {
   color?: string;
   /** An image's picture: a URL or a data: URL. */
   src?: string;
-  /** A mesh's vertices: x, y, z each, in the entity's own frame (pos, rot and scale place it). */
-  vertices?: number[];
-  /** A mesh's triangles: three vertex indices each, counter-clockwise seen from the front. */
-  indices?: number[];
-  /** A field over a mesh, one number per vertex, that the UI colours over range. */
-  values?: number[];
-  /** The values that take the low and high ends of the colour scale. */
+  /** A mesh's vertices: x, y, z each, in the entity's own frame (pos, rot and scale place it). Shape [n, 3], f32. */
+  vertices?: NumberArray;
+  /** A mesh's triangles: three vertex indices each, counter-clockwise seen from the front. Shape [m, 3], u32 (or i32, u8). */
+  indices?: NumberArray;
+  /** A field over a mesh, one number per vertex (a pressure, a stress), that the UI colours over range. Shape [n]. */
+  values?: NumberArray;
+  /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
 };
 
@@ -607,6 +607,31 @@ export type Project = {
   };
 };
 
+/** Binary frames (#18): an array's element type, little-endian. f32, f64: IEEE floats; i32, u32: 32-bit integers; u8: bytes. */
+export type DType = "f32" | "f64" | "i32" | "u32" | "u8";
+
+/** Binary frames (#18): where a message has a typed array, a client that asked for binary frames gets this in its place. The frame whose descriptor has this id came over the same WebSocket right before the message. */
+export type BinaryRef = {
+  /** The binary frame's id (its descriptor's id), unique on this connection. */
+  binary: string;
+};
+
+/** Binary frames (#18): a typed array. JSON numbers, flat and row-major, for a client without binary frames; a BinaryRef for one with them. */
+export type NumberArray = number[] | BinaryRef;
+
+/** Binary frames (#18): the JSON descriptor inside a binary frame (protocol/README.md, Binary frames): which array it is and how to read its payload. */
+export type BinaryFrameDescriptor = {
+  /** What the BinaryRef in the next text message names. */
+  id: string;
+  dtype: DType;
+  /** The array's dimensions, row-major; the payload holds their product of elements. */
+  shape: number[];
+  /** Where the reference sits in that message, as a JSON pointer (/entities/0/vertices); for logs and tools. */
+  path?: string;
+  /** How the payload is packed; absent means none, the only one in layout 1. A decoder refuses one it doesn't know. */
+  compression?: "none";
+};
+
 /** Every message a backend sends. */
 export type ServerMsg =
   | {
@@ -617,6 +642,8 @@ export type ServerMsg =
     run?: RunSettings;
     /** Available optional toolkits and their installed status on this machine. */
     toolkits?: ToolkitStatus[];
+    /** The binary frame layout this backend sends to this connection (1), present only when the client asked with ?binary=1 in its WebSocket URL: typed arrays come as binary frames and BinaryRef references. Absent: every array is JSON numbers. */
+    binary?: number;
     /** The flow types this backend offers (#9): what a sheet may be. Absent (an older backend): a Signal flow, and a Step flow if a block has step ports. */
     flows?: FlowType[];
   }
