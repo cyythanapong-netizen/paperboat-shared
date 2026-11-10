@@ -20,7 +20,7 @@
 .scope-status { font-family: var(--font-mono); color: var(--text); }
 .scope-status.live, .scope-status.armed, .scope-status.triggered { color: var(--signal-text); }
 .scope-status.idle { color: var(--text-muted); }
-.scope-keys { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.scope-keys { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .scope-modes { display: inline-flex; gap: 2px; margin-right: 8px; }
 .scope-modes button { all: unset; cursor: pointer; padding: 0 4px; font: var(--size-2xs) var(--font-mono); color: var(--text-muted); white-space: pre; }
 .scope-modes button.on { color: var(--text); font-weight: 600; }

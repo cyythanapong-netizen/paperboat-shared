@@ -45,7 +45,8 @@ type Props = {
   live: boolean;
   settings: ScopeSettings;
   onSettings?: (next: ScopeSettings) => void;
-  /** Normal size: corner ranges, a one-line legend, only ⋯ in the caption. */
+  /** Normal size: corner ranges, a one-line legend, only ⋯ in the caption. A caption too narrow
+      for its keys folds them into ⋯ at any size. */
   small?: boolean;
   /** What waits to be plotted before the first sample: its inputs' names. */
   placeholder?: string;
@@ -88,6 +89,11 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
   const [tapQuery, setTapQuery] = useState("");
   const [triggered, setTriggered] = useState<number | null>(null);
   const [theme, setTheme] = useState(0);
+  const [folded, setFolded] = useState(small);
+  /** The caption's full key row width when it last unfolded; 0 until measured. */
+  const keyRowWidth = useRef(0);
+  const frame = useRef<HTMLElement>(null);
+  const caption = useRef<HTMLElement>(null);
   const host = useRef<HTMLDivElement>(null);
   const plot = useRef<uPlot | null>(null);
   const view = useRef<View>({ x: null, y: null });
@@ -99,6 +105,37 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
   draws.current = { cursors, triggered, trigger: settings.trigger, mode };
   const isFrozen = frozen || !live;
   const status = !live ? (channels.length ? "result" : "idle") : frozen ? "frozen" : settings.trigger && mode === "time" ? (triggered === null ? "armed" : "triggered") : "live";
+  const compact = small || folded;
+
+  // The caption's keys fold into ⋯ when the tile is too narrow for them (#273): a full row needs
+  // about 770px with every choice on. Measure after layout, before paint, so it never spills.
+  useLayoutEffect(() => {
+    const figure = frame.current;
+    const row = caption.current;
+    if (!figure || !row) return;
+    const measure = () => {
+      if (small) {
+        keyRowWidth.current = 0;
+        setFolded(true);
+        return;
+      }
+      if (!folded) {
+        // Expanded: it spills only when the row cannot fit. Keep what it needs to unfold again.
+        if (row.scrollWidth > row.clientWidth + 1) {
+          keyRowWidth.current = row.scrollWidth;
+          setFolded(true);
+        }
+      } else if (keyRowWidth.current === 0 || row.clientWidth >= keyRowWidth.current + 8) {
+        // Unfold to measure when starting wide after a small tile, or when there is room again.
+        setFolded(false);
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(figure);
+    ro.observe(row);
+    return () => ro.disconnect();
+  }, [small, folded, name, mode, timeSpanMode, tool, frozen, cursors, settings.trigger, onTap, channels.length, status]);
 
   useEffect(() => {
     liveWindow.current = settings.window;
@@ -555,6 +592,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
 
   return (
     <figure
+      ref={frame}
       className={`instrument scope${channels.length ? "" : " idle"}${small ? " small" : ""}`}
       data-widget={scopeWidget.id}
       data-widget-version={scopeWidget.version}
@@ -627,11 +665,11 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
           </div>
         )}
       </div>
-      <figcaption>
+      <figcaption ref={caption}>
         <span>{name}</span>
         <span className={`scope-status ${status}`}>{status}</span>
         <span className="scope-keys">
-          {!small && (
+          {!compact && (
             <>
               <span className="scope-modes" role="radiogroup" aria-label="Mode">
                 {MODES.map((m) => (
@@ -710,7 +748,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
         </span>
         {menu === "more" && (
           <div className="scope-pop" role="menu">
-            {small && (
+            {compact && (
               <div className="scope-row">
                 {MODES.map((m) => (
                   <button key={m} className={`opt${mode === m ? " on" : ""}`} onClick={() => set({ mode: m === "time" ? undefined : m })}>
@@ -745,8 +783,11 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
             <label className="scope-row">
               <input type="checkbox" checked={!!settings.ylog} disabled={mode !== "time"} onChange={(e) => set({ ylog: e.target.checked || undefined })} /> log y
             </label>
-            {small && (
+            {compact && (
               <>
+                {onTap && (
+                  <button className="opt" onClick={() => setMenu("tap")}>+ tap</button>
+                )}
                 <button className="opt" disabled={!live} onClick={toggleFreeze}>{toggle(frozen && live, "freeze")}</button>
                 <button className="opt" disabled={mode !== "time"} onClick={toggleCursors}>{toggle(!!cursors, "cursors")}</button>
                 <button className="opt" disabled={mode !== "time"} onClick={() => setMenu("trigger")}>{toggle(!!trig, "trigger")}</button>
