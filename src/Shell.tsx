@@ -394,6 +394,7 @@ export function Panel({
   mode,
   current,
   at,
+  i,
   onOpen,
   info,
   actions,
@@ -405,6 +406,8 @@ export function Panel({
   current: boolean;
   /** The current page's place in the column (Navigator slides there). */
   at: number;
+  /** Optional index of this page in the active pages column (defaults to index(page)). */
+  i?: number;
   onOpen: () => void;
   info?: ReactNode;
   /** Keys in the head, before Open (the page's Add). */
@@ -471,7 +474,7 @@ export function Panel({
       className={`panel panel-${page}${current ? " current" : ""}${drawer ? ` drawer drawer-${drawer.side}` : ""}${closed ? " closed" : ""}`}
       inert={mode === "navigator" && !current}
       aria-label={label}
-      style={{ "--i": index(page), "--at": at, ...(drawer ? { "--drawer-size": `${drawer.size}px` } : {}) } as CSSProperties}
+      style={{ "--i": i ?? index(page), "--at": at, ...(drawer ? { "--drawer-size": `${drawer.size}px` } : {}) } as CSSProperties}
     >
       {closed && side ? (
         <header className="panel-head side-tab" {...handle} title={`Open the ${label}`}>
