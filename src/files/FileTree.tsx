@@ -1,7 +1,7 @@
 // The Files tree shared by Paperboat Studio apps: Squero OM's Modelica packages and classes,
 // MX's Julia scripts and folders. It owns only the interaction state (collapse, menu, drop);
 // the host owns the entries and the mutations.
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState, type ReactNode } from "react";
 
 export type FileIcon =
   | "folder" | "package" | "model" | "block" | "connector" | "record" | "function" | "file" | "class";
@@ -13,6 +13,8 @@ export type FileEntry = {
   depth: number;
   kind: "folder" | "file";
   icon: FileIcon;
+  /** A host-drawn glyph that replaces the generic kind icon (a language mark, say). */
+  glyph?: ReactNode;
   /** A short right-hand label ("jl", "package", …). */
   badge?: string;
 };
@@ -200,7 +202,7 @@ export const FileTree = forwardRef<FileTreeHandle, {
             }}
           >
             <span className="caret">{entry.kind === "folder" ? (open ? "▾" : "▸") : ""}</span>
-            <span className="file-icon" title={entry.icon}><KindGlyph icon={entry.icon} /></span>
+            <span className="file-icon" title={entry.icon}>{entry.glyph ?? <KindGlyph icon={entry.icon} />}</span>
             <span className="nm">{entry.name}</span>
             <span className="k">{entry.badge ?? ""}</span>
           </button>

@@ -100,7 +100,8 @@ export function SceneView({ entities, view, grid, projection = "persp", axes = f
 
   useEffect(() => {
     const el = host.current!;
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // preserveDrawingBuffer keeps the frame readable for PNG/SVG/PDF/EPS export.
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     el.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     // The theme's colours (tokens.css); the view is rebuilt when the theme changes.
