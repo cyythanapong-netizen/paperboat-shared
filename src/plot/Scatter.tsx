@@ -2,6 +2,7 @@
 // line. It lives here so a Studio never draws its own chart canvas.
 import { useEffect, useRef } from "react";
 import uPlot from "uplot";
+import "uplot/dist/uPlot.min.css";
 import "./plot.css";
 
 export type ScatterProps = {
@@ -9,7 +10,7 @@ export type ScatterProps = {
   color?: string;
 };
 
-export function Scatter({ points, color = "var(--signal, #ff5a1f)" }: ScatterProps) {
+export function Scatter({ points, color = "#3e63dd" }: ScatterProps) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
