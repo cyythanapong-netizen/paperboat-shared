@@ -1,10 +1,21 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { Entity, View } from "../protocol.ts";
 import { meshGeometry, meshLook, paintField } from "./meshes.ts";
 import { viewCube } from "../viewCube.ts";
 import { viewAxes } from "./viewAxes.ts";
+
+/** A counter that changes with `data-theme`: the scene reads CSS tokens only when it is built. */
+function useThemeVersion(): number {
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setVersion((value) => value + 1));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return version;
+}
 
 /** `look` is what the geometry and material were built from; when it changes, rebuild. */
 type World = { scene: THREE.Scene; objects: Map<string, { obj: THREE.Object3D; look: string }> };
@@ -84,6 +95,7 @@ function applyEntity(obj: THREE.Object3D, e: Entity) {
  */
 export function SceneView({ entities, view, grid, projection = "persp", axes = false }: { entities: Record<string, Entity>; view: View; grid: boolean; projection?: "persp" | "iso"; axes?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
+  const themeVersion = useThemeVersion();
   const world = useRef<World | null>(null);
   // The floor grid (3D only) shows or hides without rebuilding the view.
   const floorGrid = useRef<THREE.GridHelper | null>(null);
@@ -224,7 +236,7 @@ export function SceneView({ entities, view, grid, projection = "persp", axes = f
       world.current = null;
       floorGrid.current = null;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- view is read once; see doc comment
+  }, [themeVersion]); // eslint-disable-line react-hooks/exhaustive-deps -- view is read once per theme build
 
   useEffect(() => {
     const w = world.current;
@@ -246,7 +258,7 @@ export function SceneView({ entities, view, grid, projection = "persp", axes = f
       }
       applyEntity(entry.obj, e);
     }
-  }, [entities]);
+  }, [entities, themeVersion]);
 
   return <div className="scene" ref={host} />;
 }
