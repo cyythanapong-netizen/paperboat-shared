@@ -1,2 +1,5 @@
 /* Shared 2D plot primitives. */
 .pb-heatmap { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.pb-scatter { position: absolute; inset: 0; }
+.pb-scatter .uplot { width: 100%; height: 100%; }

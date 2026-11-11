@@ -259,7 +259,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
         dash: dashOf(k),
         scale: mode === "fft" ? "y" : scaleOf(c.unit),
         spanGaps: true,
-        paths: mode === "xy" ? (draw === "points" ? () => null : trail) : pathOf(),
+        paths: mode === "xy" ? trail : pathOf(),
         points: { show: draw === "points" || draw === "line+points", size: draw === "points" ? 4 : 5, width: 1, stroke, fill: draw === "points" ? stroke : screen },
       });
     }

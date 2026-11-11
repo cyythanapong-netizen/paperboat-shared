@@ -7,3 +7,5 @@ export { Sparkline } from "./Sparkline.tsx";
 export type { SparklineProps } from "./Sparkline.tsx";
 export { Heatmap } from "./Heatmap.tsx";
 export type { HeatmapProps } from "./Heatmap.tsx";
+export { Scatter } from "./Scatter.tsx";
+export type { ScatterProps } from "./Scatter.tsx";
