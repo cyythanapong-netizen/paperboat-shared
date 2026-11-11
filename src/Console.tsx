@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { useDismiss } from "./dismiss.tsx";
 /** One Console line; `node` names the block it is about. */
 export type Log = { level: string; text: string; node?: string };
@@ -66,14 +67,17 @@ export function ConsoleWindow({
   errors,
   onBlock,
   onClose,
+  triggerRef,
 }: {
   logs: Logs;
   errors: number;
   onBlock?: (id: string) => void;
   onClose: () => void;
+  /** The Console key that toggles this window; a press on it must not dismiss and reopen. */
+  triggerRef?: RefObject<HTMLElement | null>;
 }) {
   const root = useRef<HTMLElement>(null);
-  useDismiss(root, onClose);
+  useDismiss(root, onClose, { triggerRef });
   return (
     <section className="console-window" role="dialog" aria-label="Console" ref={root}>
       <header className="console-head">
