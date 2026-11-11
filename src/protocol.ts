@@ -261,6 +261,8 @@ export type Entity = {
   wireframe?: boolean;
   /** The edge colour; absent: the theme's ink. */
   wireframeColor?: string;
+  /** Draw through other geometry (chart axes at the origin, a coordinate cross). */
+  overlay?: boolean;
   /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
 };
@@ -496,6 +498,8 @@ export type EntityPatch = {
   wireframe?: boolean;
   /** The edge colour; absent: the theme's ink. */
   wireframeColor?: string;
+  /** Draw through other geometry (chart axes at the origin, a coordinate cross). */
+  overlay?: boolean;
   /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
 };

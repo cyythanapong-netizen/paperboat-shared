@@ -20,7 +20,7 @@ function useThemeVersion(): number {
 /** `look` is what the geometry and material were built from; when it changes, rebuild. */
 type World = { scene: THREE.Scene; objects: Map<string, { obj: THREE.Object3D; look: string }> };
 
-const lookOf = (e: Entity) => JSON.stringify([e.shape, e.size, e.color, e.src, e.shape === "mesh" ? meshLook(e) : null, e.wireframe, e.wireframeColor]);
+const lookOf = (e: Entity) => JSON.stringify([e.shape, e.size, e.color, e.src, e.shape === "mesh" ? meshLook(e) : null, e.wireframe, e.wireframeColor, e.overlay]);
 
 function dispose(obj: THREE.Object3D) {
   for (const child of obj.children) {
@@ -42,7 +42,14 @@ function createObject(e: Entity, flat = false): THREE.Object3D {
   const color = new THREE.Color(e.color ?? (getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim() || "#888888"));
   if (e.shape === "line") {
     const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-    return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color }));
+    const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+      color,
+      depthTest: !e.overlay,
+      depthWrite: !e.overlay,
+      transparent: !!e.overlay,
+    }));
+    if (e.overlay) line.renderOrder = 10;
+    return line;
   }
   if (e.shape === "image") {
     const [w, h] = e.size ?? [1, 1];
