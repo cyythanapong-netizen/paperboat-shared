@@ -437,7 +437,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
   };
   const autoscaleNow = useRef(autoscale);
   autoscaleNow.current = autoscale;
-  const drag = useRef<null | { kind: "pan" | "cursor" | "level"; i?: number; x0: number; min: number; max: number }>(null);
+  const drag = useRef<null | { kind: "pan" | "cursor" | "level"; i?: number; x0: number; y0?: number; min: number; max: number; ymin?: number; ymax?: number }>(null);
   const local = (e: { clientX: number; clientY: number }) => {
     const u = plot.current!;
     const r = u.over.getBoundingClientRect();
@@ -448,13 +448,14 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     if (!u || e.button !== 0 || e.ctrlKey || e.metaKey || mode !== "time" || !(e.target as Element).closest(".u-over")) return;
     const p = local(e);
     const min = u.scales.x.min ?? 0, max = u.scales.x.max ?? 1;
+    const ymin = u.scales.y.min ?? 0, ymax = u.scales.y.max ?? 1;
     const near = cursors?.findIndex((t) => Math.abs(u.valToPos(t, "x") - p.x) < 7) ?? -1;
     const trig = settings.trigger;
     if (near >= 0) drag.current = { kind: "cursor", i: near, x0: p.x, min, max };
     else if (trig && p.x > p.w - 18 && Math.abs(u.valToPos(trig.level, scaleOf(channels.find((c) => c.id === trig.source)?.unit)) - p.y) < 9)
       drag.current = { kind: "level", x0: p.y, min, max };
     else if (tool === "zoom") return; // Square cursor drag zoom: uPlot handler draws the zoom box
-    else drag.current = { kind: "pan", x0: p.x, min, max };
+    else drag.current = { kind: "pan", x0: p.x, y0: p.y, min, max, ymin, ymax };
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     e.stopPropagation(); // outside Arrange the Board must not start a drag of the cell
   };
@@ -463,8 +464,11 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     if (!u || !d) return;
     const p = local(e);
     if (d.kind === "pan") {
-      const shift = ((p.x - d.x0) * (d.max - d.min)) / p.w;
-      view.current.x = [d.min - shift, d.max - shift];
+      // Both axes move with the pointer: a zoomed y view pans up and down too.
+      const dx = ((p.x - d.x0) * (d.max - d.min)) / p.w;
+      const dy = ((p.y - (d.y0 ?? p.y)) * ((d.ymax ?? 0) - (d.ymin ?? 0))) / p.h;
+      view.current.x = [d.min - dx, d.max - dx];
+      view.current.y = [(d.ymin ?? 0) + dy, (d.ymax ?? 0) + dy];
       if (!frozen) setFrozen(true); // panning back in time freezes the Scope
       u.redraw(true);
     } else if (d.kind === "cursor" && cursors) {
@@ -715,7 +719,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
                       role="radio"
                       aria-checked={on}
                       className={on ? "on" : ""}
-                      title={t === "pan" ? "Pan: drag to pan along time" : "Zoom: drag a rectangle to zoom in (Z)"}
+                      title={t === "pan" ? "Pan: drag to pan along time and value" : "Zoom: drag a rectangle to zoom in (Z)"}
                       onClick={() => setTool(t)}
                     >
                       {on ? `[ ${t} ]` : t}
