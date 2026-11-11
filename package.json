@@ -74,7 +74,12 @@
     "./dashboard": {
       "types": "./src/Dashboard.tsx",
       "default": "./src/Dashboard.tsx"
-    }
+    },
+    "./files": {
+      "types": "./src/files/index.ts",
+      "default": "./src/files/index.ts"
+    },
+    "./files.css": "./src/files/files.css"
   },
   "peerDependencies": {
     "three": ">=0.187.0"
