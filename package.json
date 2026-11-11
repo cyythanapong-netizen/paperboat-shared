@@ -58,6 +58,22 @@
     "./widgets": {
       "types": "./src/widgets.ts",
       "default": "./src/widgets.ts"
+    },
+    "./protocol": {
+      "types": "./src/protocol.ts",
+      "default": "./src/protocol.ts"
+    },
+    "./plot": {
+      "types": "./src/plot/index.ts",
+      "default": "./src/plot/index.ts"
+    },
+    "./station": {
+      "types": "./src/station/index.ts",
+      "default": "./src/station/index.ts"
+    },
+    "./dashboard": {
+      "types": "./src/Dashboard.tsx",
+      "default": "./src/Dashboard.tsx"
     }
   },
   "peerDependencies": {
