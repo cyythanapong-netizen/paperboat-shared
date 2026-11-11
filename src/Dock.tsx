@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useDismiss } from "./dismiss.tsx";
 // RunOptions and VarControls are passed or slotted if needed
@@ -59,6 +59,16 @@ export type BackendInfo = {
   variablesCount?: number;
 };
 
+/** One row of `paperboat list --json` (the `/__paperboat/backends` endpoint). */
+type RunningBackend = {
+  kind?: string;
+  name?: string;
+  engine?: string;
+  domain?: string;
+  port: number;
+  url: string;
+};
+
 /**
  * File > Backend…: which backend the app talks to. A packaged app has one and never needs this; it is for
  * tinkerers pointing the app at another (an address, such as ws://localhost:8765). Esc or Close leaves.
@@ -79,8 +89,32 @@ export function BackendWindow({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(url);
+  const [running, setRunning] = useState<RunningBackend[]>([]);
+  const [looking, setLooking] = useState(true);
+  const [listMissing, setListMissing] = useState(false);
   const root = useRef<HTMLElement>(null);
   useDismiss(root, onClose);
+
+  // The CLI serves `/__paperboat/backends` (Vite in a checkout, the static server in a
+  // package). A host without it keeps the address field; it never blocks connecting by hand.
+  const loadRunning = () => {
+    setLooking(true);
+    fetch("/__paperboat/backends", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+      .then((list: RunningBackend[]) => {
+        setRunning(list.filter((b) => b.kind === undefined || b.kind === "backend"));
+        setListMissing(false);
+      })
+      .catch(() => {
+        setRunning([]);
+        setListMissing(true);
+      })
+      .finally(() => setLooking(false));
+  };
+  useEffect(() => {
+    loadRunning();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the dialog opens
+  }, []);
 
   const presets = ["ws://localhost:8765", "ws://127.0.0.1:8765"];
 
@@ -108,6 +142,43 @@ export function BackendWindow({
         </span>
         <button className="key">Connect</button>
       </form>
+      <div className="backend-running">
+        <div className="backend-running-head">
+          <span className="lbl muted">Running backends</span>
+          <button type="button" className="key small" onClick={loadRunning} disabled={looking}>
+            {looking ? "Looking…" : "Refresh"}
+          </button>
+        </div>
+        {running.length > 0 ? (
+          <ul>
+            {running.map((b) => {
+              const target = b.url || `ws://localhost:${b.port}`;
+              const name = b.engine || b.domain || b.name || `port ${b.port}`;
+              return (
+                <li key={target}>
+                  <button
+                    type="button"
+                    className={`backend-pick${url === target ? " current" : ""}`}
+                    aria-current={url === target ? "true" : undefined}
+                    title={`Connect to ${name} on ${target}`}
+                    onClick={() => {
+                      setDraft(target);
+                      onConnect(target);
+                    }}
+                  >
+                    <span className="name">{name}</span>
+                    <span className="lbl">{target}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <span className="lbl muted">
+            {looking ? "Looking for running backends…" : listMissing ? "The CLI list is not available here; type an address below." : "No backends are running."}
+          </span>
+        )}
+      </div>
       <div className="backend-presets">
         <span className="lbl muted">Presets:</span>
         {presets.map((p) => (

@@ -274,6 +274,8 @@ export function Rail({ page, onPage, hidden, allowedPages, pages }: { page: Page
   const offered = pages ?? PAGES;
   const visiblePages = allowedPages && allowedPages.length > 0 ? offered.filter((p) => allowedPages.includes(p.id)) : offered;
   const at = Math.max(0, visiblePages.findIndex((p) => p.id === page));
+  /** The pages on the rail; a page hidden from it re-places the brackets even when the index stays. */
+  const pageKey = visiblePages.map((p) => p.id).join("|");
   const was = useRef(-1);
   const onPageRef = useRef(onPage);
   onPageRef.current = onPage;
@@ -316,7 +318,7 @@ export function Rail({ page, onPage, hidden, allowedPages, pages }: { page: Page
     const ro = new ResizeObserver(() => (started ? place(0) : (started = true)));
     ro.observe(r);
     return () => ro.disconnect();
-  }, [at]);
+  }, [at, pageKey]);
 
   // The wheel over the rail steps a page at a time (not passive: it must not scroll anything else).
   useLayoutEffect(() => {

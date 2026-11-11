@@ -742,12 +742,18 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
               </button>
             </>
           )}
+          <button className="key small" disabled={!channels.length} title="Fit the graph to its data (A, double-click)" aria-label="Fit graph" onClick={autoscale}>
+            ⌂
+          </button>
           <button className="key small" title="More" aria-haspopup="menu" aria-expanded={menu === "more"} onClick={() => setMenu(menu === "more" ? "" : "more")}>
             ⋯
           </button>
         </span>
         {menu === "more" && (
           <div className="scope-pop" role="menu">
+            <button className="opt" disabled={!channels.length} onClick={() => { autoscale(); setMenu(""); }}>
+              Fit graph
+            </button>
             {compact && (
               <div className="scope-row">
                 {MODES.map((m) => (

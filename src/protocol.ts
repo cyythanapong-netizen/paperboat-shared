@@ -638,6 +638,8 @@ export type ServerMsg =
     type: "hello";
     protocol: "paperboat/0";
     engine: string;
+    /** The Paperboat build that serves this backend (PAPERBOAT_VERSION). Absent: an older backend. */
+    version?: string;
     station?: StationView;
     run?: RunSettings;
     /** Available optional toolkits and their installed status on this machine. */
