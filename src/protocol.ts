@@ -553,6 +553,8 @@ export type Variable = {
   expr?: string;
   /** A number's unit (m, N, rad…). */
   unit?: string;
+  /** UI only: a live variable broadcast by Squero Studio MX, not saved in the project. */
+  source?: "mx";
   min?: number;
   max?: number;
   /** How much one nudge in the UI changes it. */
@@ -690,6 +692,12 @@ export type ServerMsg =
     variables: Variables;
   }
   | {
+    /** Live variables from another client (Squero MX), shared across the backend's sessions. */
+    type: "variables.remote";
+    source: "mx";
+    variables: Variables;
+  }
+  | {
     type: "project.load";
     name?: string;
     project: Project;
@@ -808,6 +816,8 @@ export type ClientMsg =
   | {
     type: "variables.set";
     variables: Variables;
+    /** Another client's live variables (Squero MX): share them, do not make them this session's project. */
+    source?: "mx";
   }
   | {
     type: "run.cancel";
