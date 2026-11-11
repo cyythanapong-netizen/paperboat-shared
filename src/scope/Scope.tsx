@@ -228,7 +228,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     const font = `11px ${css.getPropertyValue("--font-mono").trim() || "monospace"}`;
     const screen = css.getPropertyValue("--surface-screen").trim() || "#050505";
     const grid = showGrid
-      ? { stroke: css.getPropertyValue("--grid-line").trim() || "#222", width: 1, dash: [1, 3] }
+      ? { stroke: css.getPropertyValue("--grid-line").trim() || "#333", width: 1, dash: [2, 4] }
       : { show: false };
     // Units are written in the screen's corners (see the JSX), not as axis titles.
     const axis = (scale: string, side: 1 | 2 | 3): uPlot.Axis => ({
@@ -259,7 +259,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
         dash: dashOf(k),
         scale: mode === "fft" ? "y" : scaleOf(c.unit),
         spanGaps: true,
-        paths: mode === "xy" ? trail : pathOf(),
+        paths: mode === "xy" ? (draw === "points" ? () => null : trail) : pathOf(),
         points: { show: draw === "points" || draw === "line+points", size: draw === "points" ? 4 : 5, width: 1, stroke, fill: draw === "points" ? stroke : screen },
       });
     }

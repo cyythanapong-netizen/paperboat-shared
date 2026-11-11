@@ -5,3 +5,5 @@ export type { ScopeMode, TimeSpanMode, ScopeTool, DrawStyle, Trigger, ScopeSetti
 export type { ScopeChannel, ScopeSamples, TapPort } from "../scope/index.ts";
 export { Sparkline } from "./Sparkline.tsx";
 export type { SparklineProps } from "./Sparkline.tsx";
+export { Heatmap } from "./Heatmap.tsx";
+export type { HeatmapProps } from "./Heatmap.tsx";

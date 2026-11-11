@@ -26,15 +26,12 @@ export function viewAxes(
   host: HTMLElement,
   renderer: THREE.WebGLRenderer,
   getCamera: THREE.PerspectiveCamera | THREE.OrthographicCamera | (() => THREE.PerspectiveCamera | THREE.OrthographicCamera),
-  token: (name: string, fallback: string) => string,
+  _token: (name: string, fallback: string) => string,
 ) {
   const getCam = () => (typeof getCamera === "function" ? getCamera() : getCamera);
   const scene = new THREE.Scene();
-  const colors = {
-    x: token("--text-muted", "#55554f"),
-    y: token("--signal", "#ff5a1f"),
-    z: token("--line-strong", "#8a8a84"),
-  };
+  // Engineering axes: x red, y green, z blue, in every theme.
+  const colors = { x: "#e5484d", y: "#30a46c", z: "#3e63dd" };
   const axes: { arrow: THREE.ArrowHelper; sprite: THREE.Sprite }[] = [
     { dir: [1, 0, 0], name: "x" },
     { dir: [0, 1, 0], name: "y" },
@@ -49,7 +46,13 @@ export function viewAxes(
     return { arrow, sprite };
   });
 
-  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 10);
+  // The triad uses the scene camera's own projection, so it foreshortens like the graph:
+  // perspective follows the scene's fov, and an isometric scene gets the orthographic triad.
+  const makeCamera = (perspective: boolean) =>
+    perspective
+      ? new THREE.PerspectiveCamera(45, 1, 0.1, 20)
+      : new THREE.OrthographicCamera(-1.55, 1.55, 1.55, -1.55, 0.1, 20);
+  let camera = makeCamera(true);
   const overlay = document.createElement("div");
   overlay.className = "view-axes";
   overlay.style.cssText = `position:absolute;left:${MARGIN}px;bottom:${MARGIN}px;width:${SIZE}px;height:${SIZE}px;pointer-events:none;`;
@@ -58,8 +61,19 @@ export function viewAxes(
   return {
     /** Draw the triad over the scene just rendered, `width` x `height` px. */
     draw(width: number, height: number) {
-      camera.quaternion.copy(getCam().quaternion);
-      camera.position.set(0, 0, 4).applyQuaternion(getCam().quaternion);
+      const sceneCamera = getCam();
+      const perspective = sceneCamera instanceof THREE.PerspectiveCamera;
+      if (perspective !== (camera instanceof THREE.PerspectiveCamera)) camera = makeCamera(perspective);
+      camera.quaternion.copy(sceneCamera.quaternion);
+      if (camera instanceof THREE.PerspectiveCamera && sceneCamera instanceof THREE.PerspectiveCamera) {
+        camera.fov = sceneCamera.fov;
+        camera.aspect = 1;
+        camera.updateProjectionMatrix();
+        const distance = 1.6 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+        camera.position.set(0, 0, distance).applyQuaternion(sceneCamera.quaternion);
+      } else {
+        camera.position.set(0, 0, 5).applyQuaternion(sceneCamera.quaternion);
+      }
       renderer.setViewport(MARGIN, MARGIN, SIZE, SIZE);
       renderer.setScissor(MARGIN, MARGIN, SIZE, SIZE);
       renderer.setScissorTest(true);
