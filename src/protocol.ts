@@ -257,6 +257,10 @@ export type Entity = {
   indices?: NumberArray;
   /** A field over a mesh, one number per vertex (a pressure, a stress), that the UI colours over range. Shape [n]. */
   values?: NumberArray;
+  /** Draw the mesh's edges over its faces. */
+  wireframe?: boolean;
+  /** The edge colour; absent: the theme's ink. */
+  wireframeColor?: string;
   /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
 };
@@ -488,6 +492,10 @@ export type EntityPatch = {
   indices?: NumberArray;
   /** A field over a mesh, one number per vertex (a pressure, a stress), that the UI colours over range. Shape [n]. */
   values?: NumberArray;
+  /** Draw the mesh's edges over its faces. */
+  wireframe?: boolean;
+  /** The edge colour; absent: the theme's ink. */
+  wireframeColor?: string;
   /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
 };
