@@ -4,6 +4,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { Entity, View } from "../protocol.ts";
 import { meshGeometry, meshLook, paintField } from "./meshes.ts";
 import { viewCube } from "../viewCube.ts";
+import { viewAxes } from "./viewAxes.ts";
 
 /** `look` is what the geometry and material were built from; when it changes, rebuild. */
 type World = { scene: THREE.Scene; objects: Map<string, { obj: THREE.Object3D; look: string }> };
@@ -64,7 +65,7 @@ function applyEntity(obj: THREE.Object3D, e: Entity) {
  * Renders the backend's scene entities. Knows shapes, not domains. The camera is fixed
  * at mount from `view`, so the parent remounts this component when the view changes.
  */
-export function SceneView({ entities, view, grid, projection = "persp" }: { entities: Record<string, Entity>; view: View; grid: boolean; projection?: "persp" | "iso" }) {
+export function SceneView({ entities, view, grid, projection = "persp", axes = false }: { entities: Record<string, Entity>; view: View; grid: boolean; projection?: "persp" | "iso"; axes?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const world = useRef<World | null>(null);
   // The floor grid (3D only) shows or hides without rebuilding the view.
@@ -174,8 +175,9 @@ export function SceneView({ entities, view, grid, projection = "persp" }: { enti
       };
     }
 
-    // 3D only: the view cube in the corner (hidden in 2D views).
+    // 3D only: the view cube in the corner and the orientation triad (hidden in 2D views).
     const cube = view.mode === "3d" ? viewCube(el, renderer, () => camera, controls, token) : null;
+    const triad = view.mode === "3d" && axes ? viewAxes(el, renderer, () => camera, token) : null;
     renderer.autoClear = false;
 
     const resize = new ResizeObserver(() => {
@@ -189,6 +191,7 @@ export function SceneView({ entities, view, grid, projection = "persp" }: { enti
       renderer.clear();
       renderer.render(scene, camera);
       cube?.draw(el.clientWidth, el.clientHeight);
+      triad?.draw(el.clientWidth, el.clientHeight);
     });
 
     return () => {
@@ -196,6 +199,7 @@ export function SceneView({ entities, view, grid, projection = "persp" }: { enti
       renderer.setAnimationLoop(null);
       resize.disconnect();
       cube?.dispose();
+      triad?.dispose();
       controls.dispose();
       renderer.dispose();
       el.removeChild(renderer.domElement);
