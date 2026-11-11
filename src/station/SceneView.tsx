@@ -9,9 +9,15 @@ import { viewAxes } from "./viewAxes.ts";
 /** `look` is what the geometry and material were built from; when it changes, rebuild. */
 type World = { scene: THREE.Scene; objects: Map<string, { obj: THREE.Object3D; look: string }> };
 
-const lookOf = (e: Entity) => JSON.stringify([e.shape, e.size, e.color, e.src, e.shape === "mesh" ? meshLook(e) : null]);
+const lookOf = (e: Entity) => JSON.stringify([e.shape, e.size, e.color, e.src, e.shape === "mesh" ? meshLook(e) : null, e.wireframe, e.wireframeColor]);
 
 function dispose(obj: THREE.Object3D) {
+  for (const child of obj.children) {
+    if (child instanceof THREE.LineSegments) {
+      child.geometry.dispose();
+      (child.material as THREE.Material).dispose();
+    }
+  }
   if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
     obj.geometry.dispose();
     const material = obj.material as THREE.MeshBasicMaterial;
@@ -36,8 +42,19 @@ function createObject(e: Entity, flat = false): THREE.Object3D {
   if (e.shape === "mesh") {
     const geometry = meshGeometry(e);
     const field = geometry.getAttribute("color") !== undefined;
-    const options = { color: field ? 0xffffff : color, vertexColors: field, side: THREE.DoubleSide };
-    return new THREE.Mesh(geometry, flat ? new THREE.MeshBasicMaterial(options) : new THREE.MeshStandardMaterial(options));
+    const options = {
+      color: field ? 0xffffff : color, vertexColors: field, side: THREE.DoubleSide,
+      polygonOffset: !!e.wireframe, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+    };
+    const mesh = new THREE.Mesh(geometry, flat ? new THREE.MeshBasicMaterial(options) : new THREE.MeshStandardMaterial(options));
+    if (e.wireframe) {
+      const ink = e.wireframeColor ?? (getComputedStyle(document.documentElement).getPropertyValue("--line-ink").trim() || "#111111");
+      mesh.add(new THREE.LineSegments(
+        new THREE.WireframeGeometry(geometry),
+        new THREE.LineBasicMaterial({ color: ink, transparent: true, opacity: 0.35 }),
+      ));
+    }
+    return mesh;
   }
   const [a, b, c] = e.size ?? [1, 1, 1];
   const geometry =
