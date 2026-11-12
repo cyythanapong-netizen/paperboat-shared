@@ -59,7 +59,6 @@ export function usesOf(
   return out;
 }
 
-/** Whether variable `v` can stand for a param of `def`'s type. */
 /** A live matrix value as a text param sees it: JSON arrays become MATLAB-style rows. */
 export function matrixLiteral(value: unknown): string {
   if (Array.isArray(value)) {
@@ -77,6 +76,23 @@ export function matrixLiteral(value: unknown): string {
   return value;
 }
 
+/**
+ * `params` with every reference to a live variable (Squero MX) replaced by its value. Live
+ * variables are not project variables, so a run sends their values, never their names; a
+ * matrix becomes its rows. One MX could not send (too large) throws with MX's reason.
+ */
+export function inlineLive(params: Record<string, ParamValue>, live: Variables): Record<string, ParamValue> {
+  const out = { ...params };
+  for (const v of live)
+    for (const [id, p] of Object.entries(out)) {
+      if (!refersTo(p, v.name)) continue;
+      if (v.value === undefined) throw new Error(`${v.name}: ${v.note ?? "Squero MX sent no value"}`);
+      out[id] = inlineRef(p, v.name, v.type === "matrix" ? matrixLiteral(v.value) : v.value);
+    }
+  return out;
+}
+
+/** Whether variable `v` can stand for a param of `def`'s type. */
 export function fits(v: Variable, def: ParamDef): boolean {
   switch (def.type) {
     case "number":
@@ -86,6 +102,7 @@ export function fits(v: Variable, def: ParamDef): boolean {
     case "enum":
       return v.type === "enum" && def.options.includes(String(v.value));
     case "text":
+      return v.type === "text" || v.type === "file" || v.type === "matrix"; // a matrix block's rows
     case "file":
       return v.type === "text" || v.type === "file";
     default:

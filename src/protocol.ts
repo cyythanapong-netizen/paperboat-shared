@@ -546,9 +546,9 @@ export type RunSettings = {
 export type Variable = {
   /** Letters, digits and _; not t, pi, e or a function's name. */
   name: string;
-  /** Live MX matrices are not project variables; they travel as a matrix value on signal wires. */
+  /** matrix: only a live Squero MX variable (source mx), its value the rows ("1 2; 3 4"); never a project variable. */
   type: "number" | "boolean" | "enum" | "text" | "file" | "matrix";
-  /** Of its type: a number, true / false, or text (enum: one of options). */
+  /** Of its type: a number, true / false, or text (enum: one of options). A live matrix too large to share has none and says why in note. */
   value?: number | boolean | string;
   /** A number or boolean variable's formula over other variables, instead of a value. */
   expr?: string;
