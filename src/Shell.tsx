@@ -190,12 +190,20 @@ export function GlideBrackets() {
     void document.fonts?.ready.then(() => live && place(false));
     const mo = new MutationObserver(() => place(true));
     mo.observe(host, { subtree: true, attributes: true, attributeFilter: ["class", "aria-checked", "aria-selected"], childList: true, characterData: true });
+    // The pair copies the option's colour, so a theme change must re-read it (else ink on ink),
+    // and again when the option's own colour transition ends.
+    const theme = new MutationObserver(() => requestAnimationFrame(() => live && place(false)));
+    theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+    const settled = (e: TransitionEvent) => e.propertyName === "color" && e.target !== a && e.target !== b && place(false);
+    host.addEventListener("transitionend", settled);
     let started = false;
     const ro = new ResizeObserver(() => (started ? place(false) : (started = true)));
     ro.observe(host);
     return () => {
       live = false;
       mo.disconnect();
+      theme.disconnect();
+      host.removeEventListener("transitionend", settled);
       ro.disconnect();
       host.classList.remove("glide");
     };
