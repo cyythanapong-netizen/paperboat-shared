@@ -60,6 +60,23 @@ export function usesOf(
 }
 
 /** Whether variable `v` can stand for a param of `def`'s type. */
+/** A live matrix value as a text param sees it: JSON arrays become MATLAB-style rows. */
+export function matrixLiteral(value: unknown): string {
+  if (Array.isArray(value)) {
+    if (value.some((row) => Array.isArray(row)))
+      return (value as unknown[][]).map((row) => (Array.isArray(row) ? row.join(" ") : String(row))).join("; ");
+    return (value as unknown[]).join(" ");
+  }
+  if (typeof value !== "string") return String(value ?? "");
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) return matrixLiteral(parsed);
+  } catch {
+    // Already a literal matrix, a descriptor, or plain text.
+  }
+  return value;
+}
+
 export function fits(v: Variable, def: ParamDef): boolean {
   switch (def.type) {
     case "number":
