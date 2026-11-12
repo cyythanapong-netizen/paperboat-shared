@@ -8,7 +8,6 @@ import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js
 const SIZE = 96;
 const MARGIN = 8;
 const HOME = 26; // the Home key's size
-const FACES = ["RIGHT", "LEFT", "TOP", "BOTTOM", "FRONT", "BACK"]; // BoxGeometry's order: +x -x +y -y +z -z
 const THIRD = 1 / 3;
 
 /**
@@ -29,29 +28,50 @@ export function viewCube(
   const getCam = () => (typeof getCamera === "function" ? getCamera() : getCamera);
   const home = { position: getCam().position.clone(), target: controls.target.clone() };
 
-  // The cube: a label on each face, ink edges.
+  // The cube is a wireframe: faint faces for picking, ink edges, and the x/y/z axes on the
+  // negative vertex. It turns with the scene camera, so the face shown is the view you are on.
   const scene = new THREE.Scene();
-  const faceTexture = (text: string) => {
-    const c = document.createElement("canvas");
-    c.width = c.height = 128;
-    const g = c.getContext("2d")!;
-    g.fillStyle = token("--surface-panel", "#eeeeea");
-    g.fillRect(0, 0, 128, 128);
-    g.fillStyle = token("--text", "#111111");
-    g.font = "600 24px ui-monospace, monospace";
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    g.fillText(text, 64, 66);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  };
-  const materials = FACES.map((f) => new THREE.MeshBasicMaterial({ map: faceTexture(f) }));
-  const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials);
+  const cube = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshBasicMaterial({ color: token("--line-ink", "#111111"), transparent: true, opacity: 0.03, depthWrite: false }),
+  );
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(cube.geometry),
-    new THREE.LineBasicMaterial({ color: token("--line-ink", "#111111") }),
+    new THREE.LineBasicMaterial({ color: token("--text-muted", "#8a8a84") }),
   );
+
+  const label = (text: string, color: string): THREE.Sprite => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    const g = canvas.getContext("2d")!;
+    g.fillStyle = color;
+    g.font = "600 30px ui-monospace, monospace";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText(text, 32, 34);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+    sprite.scale.set(0.28, 0.28, 1);
+    return sprite;
+  };
+  const origin = new THREE.Vector3(-0.5, -0.5, -0.5);
+  const axisSpecs = [
+    { dir: [1, 0, 0], name: "x", color: "#e5484d" },
+    { dir: [0, 1, 0], name: "y", color: "#30a46c" },
+    { dir: [0, 0, 1], name: "z", color: "#3e63dd" },
+  ];
+  const axes = axisSpecs.map(({ dir, name, color }) => {
+    const v = new THREE.Vector3(...dir);
+    const arrow = new THREE.ArrowHelper(v, origin, 1.05, new THREE.Color(color), 0.12, 0.06);
+    (arrow.line.material as THREE.Material).depthTest = false;
+    (arrow.cone.material as THREE.Material).depthTest = false;
+    arrow.renderOrder = 2;
+    const sprite = label(name, color);
+    sprite.position.copy(origin).add(v.clone().multiplyScalar(1.16));
+    scene.add(arrow, sprite);
+    return { arrow, sprite };
+  });
   // Where a click would turn the camera: the third of the cube it is over.
   const mark = new THREE.Mesh(
     new THREE.BoxGeometry(THIRD * 1.04, THIRD * 1.04, THIRD * 1.04),
@@ -182,13 +202,15 @@ export function viewCube(
     dispose() {
       overlay.remove();
       homeKey.remove();
-      for (const m of materials) {
-        m.map?.dispose();
-        m.dispose();
-      }
       cube.geometry.dispose();
+      (cube.material as THREE.Material).dispose();
       edges.geometry.dispose();
       (edges.material as THREE.Material).dispose();
+      for (const { arrow, sprite } of axes) {
+        arrow.dispose();
+        sprite.material.map?.dispose();
+        sprite.material.dispose();
+      }
       mark.geometry.dispose();
       (mark.material as THREE.Material).dispose();
     },
