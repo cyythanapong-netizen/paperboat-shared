@@ -86,6 +86,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
   const [cursors, setCursors] = useState<[number, number] | null>(null);
   const [tool, setTool] = useState<ScopeTool>(settings.tool ?? "pan");
   const [menu, setMenu] = useState<"" | "more" | "trigger" | "tap">("");
+  const [menuBelow, setMenuBelow] = useState(false);
   const [tapQuery, setTapQuery] = useState("");
   const [triggered, setTriggered] = useState<number | null>(null);
   const [theme, setTheme] = useState(0);
@@ -106,6 +107,14 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
   const isFrozen = frozen || !live;
   const status = !live ? (channels.length ? "result" : "idle") : frozen ? "frozen" : settings.trigger && mode === "time" ? (triggered === null ? "armed" : "triggered") : "live";
   const compact = small || folded;
+
+  /** Open a caption menu on the side with room: below near the top, above near the bottom. */
+  const openMenu = (name: "more" | "trigger" | "tap", element?: HTMLElement | null) => {
+    if (menu === name) { setMenu(""); return; }
+    const rect = (element ?? caption.current)?.getBoundingClientRect();
+    setMenuBelow(Boolean(rect && rect.top < window.innerHeight / 2));
+    setMenu(name);
+  };
 
   // The caption's keys fold into ⋯ when the tile is too narrow for them (#273): a full row needs
   // about 770px with every choice on. Measure after layout, before paint, so it never spills.
@@ -528,7 +537,11 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     const k = e.key.toLowerCase();
     if (k === "f") toggleFreeze();
     else if (k === "c") toggleCursors();
-    else if (k === "t") setMenu((m) => (m === "trigger" ? "" : "trigger"));
+    else if (k === "t") {
+      const rect = caption.current?.getBoundingClientRect();
+      setMenuBelow(Boolean(rect && rect.top < window.innerHeight / 2));
+      setMenu((m) => (m === "trigger" ? "" : "trigger"));
+    }
     else if (k === "a") autoscale();
     else if (k === "g") set({ grid: settings.grid === false ? true : false });
     else if (k === "z") setTool((t) => (t === "zoom" ? "pan" : "zoom"));
@@ -728,7 +741,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
                 })}
               </span>
               {onTap && (
-                <button className="key small" title="Wire an output into this Scope" onClick={() => setMenu(menu === "tap" ? "" : "tap")}>
+                <button className="key small" title="Wire an output into this Scope" onClick={(e) => openMenu("tap", e.currentTarget)}>
                   + tap
                 </button>
               )}
@@ -741,7 +754,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
               <button className={`key small${cursors ? " on" : ""}`} disabled={mode !== "time" || !channels.length} title="Two cursors and their deltas (C)" onClick={toggleCursors}>
                 {toggle(!!cursors, "cursors")}
               </button>
-              <button className={`key small${trig ? " on" : ""}`} disabled={mode !== "time"} title="Trigger (T)" onClick={() => setMenu(menu === "trigger" ? "" : "trigger")}>
+              <button className={`key small${trig ? " on" : ""}`} disabled={mode !== "time"} title="Trigger (T)" onClick={(e) => openMenu("trigger", e.currentTarget)}>
                 {toggle(!!trig, "trigger")}
               </button>
             </>
@@ -749,12 +762,12 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
           <button className="key small" disabled={!channels.length} title="Fit the graph to its data (A, double-click)" aria-label="Fit graph" onClick={autoscale}>
             ⌂
           </button>
-          <button className="key small" title="More" aria-haspopup="menu" aria-expanded={menu === "more"} onClick={() => setMenu(menu === "more" ? "" : "more")}>
+          <button className="key small" title="More" aria-haspopup="menu" aria-expanded={menu === "more"} onClick={(e) => openMenu("more", e.currentTarget)}>
             ⋯
           </button>
         </span>
         {menu === "more" && (
-          <div className="scope-pop" role="menu">
+          <div className={`scope-pop${menuBelow ? " below" : ""}`} role="menu">
             <button className="opt" disabled={!channels.length} onClick={() => { autoscale(); setMenu(""); }}>
               Fit graph
             </button>
@@ -796,11 +809,11 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
             {compact && (
               <>
                 {onTap && (
-                  <button className="opt" onClick={() => setMenu("tap")}>+ tap</button>
+                  <button className="opt" onClick={() => openMenu("tap")}>+ tap</button>
                 )}
                 <button className="opt" disabled={!live} onClick={toggleFreeze}>{toggle(frozen && live, "freeze")}</button>
                 <button className="opt" disabled={mode !== "time"} onClick={toggleCursors}>{toggle(!!cursors, "cursors")}</button>
-                <button className="opt" disabled={mode !== "time"} onClick={() => setMenu("trigger")}>{toggle(!!trig, "trigger")}</button>
+                <button className="opt" disabled={mode !== "time"} onClick={() => openMenu("trigger")}>{toggle(!!trig, "trigger")}</button>
               </>
             )}
             <hr />
@@ -811,7 +824,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
           </div>
         )}
         {menu === "trigger" && (
-          <div className="scope-pop" role="dialog" aria-label="Trigger">
+          <div className={`scope-pop${menuBelow ? " below" : ""}`} role="dialog" aria-label="Trigger">
             <div className="scope-row">
               {(["rising", "falling"] as const).map((edge) => (
                 <button key={edge} className={`opt${(trig?.edge ?? "rising") === edge ? " on" : ""}`} onClick={() => set({ trigger: { source: trig?.source ?? shown[0]?.c.id ?? "", level: trig?.level ?? 0, ...trig, edge } })}>
@@ -849,7 +862,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
           </div>
         )}
         {menu === "tap" && (
-          <div className="scope-pop" role="dialog" aria-label="Tap an output">
+          <div className={`scope-pop${menuBelow ? " below" : ""}`} role="dialog" aria-label="Tap an output">
             <input className="well" autoFocus placeholder="/ search outputs" value={tapQuery} onChange={(e) => setTapQuery(e.target.value)} />
             <div className="scope-taps">
               {tapList.length === 0 && <span className="muted">no outputs</span>}
