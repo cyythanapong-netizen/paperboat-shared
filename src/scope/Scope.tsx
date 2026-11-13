@@ -14,6 +14,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
+import { applyBoxZoom, cursorBind, drawXCursors, formatCoord, nearXCursor, panXRange, panYRange, zoomRangeAround } from "./interact.ts";
 import { findTrigger, spectrum, toCsv, valueAt } from "./math.ts";
 import type { ScopeChannel as Channel, TapPort } from "./types.ts";
 import { scopeWidget } from "./widget.ts";
@@ -59,7 +60,7 @@ const DRAWS: DrawStyle[] = ["line", "line+points", "points", "smooth"];
 /** Channel k: colour k mod 8; solid for 1–4, dashed 5–8, dotted from 9 (#37). */
 const dashOf = (k: number) => (k < 4 ? [] : k < 8 ? [6, 4] : [1.5, 3]);
 const colourOf = (k: number, css: CSSStyleDeclaration) => css.getPropertyValue(`--trace-${(k % 8) + 1}`).trim() || "#ff6a30";
-const fmt = (x: number | null | undefined, digits = 3) => (x === null || x === undefined || !Number.isFinite(x) ? "–" : Math.abs(x) >= 1e4 || (x !== 0 && Math.abs(x) < 1e-3) ? x.toExponential(2) : x.toFixed(digits));
+const fmt = formatCoord;
 const download = (name: string, href: string) => {
   const a = document.createElement("a");
   a.href = href;
@@ -299,38 +300,17 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
       axes,
       series,
       select: { show: true, left: 0, top: 0, width: 0, height: 0 },
-      cursor: {
-        x: false,
-        y: false,
-        points: { show: false },
-        drag: { x: true, y: true, setScale: false },
-        bind: {
-          // A plain drag pans (pointer handlers below); zoom tool or Ctrl-drag draws uPlot's zoom box.
-          mousedown: (_u, _t, handler) => (e: MouseEvent) => {
-            if (tool === "zoom" || e.ctrlKey || e.metaKey) handler(e);
-            return null;
-          },
-          dblclick: () => () => {
-            autoscaleNow.current();
-            return null;
-          },
-        },
-      },
+      cursor: cursorBind(() => tool === "zoom", () => autoscaleNow.current()),
       hooks: {
         setSelect: [
           (u) => {
-            const s = u.select;
-            if (s.width > 4 && s.height > 4) {
-              const x0 = u.posToVal(s.left, "x");
-              const x1 = u.posToVal(s.left + s.width, "x");
-              view.current.x = [Math.min(x0, x1), Math.max(x0, x1)];
-              const y0 = u.posToVal(s.top + s.height, "y");
-              const y1 = u.posToVal(s.top, "y");
-              view.current.y = [Math.min(y0, y1), Math.max(y0, y1)];
+            const box = applyBoxZoom(u, ["y"]);
+            if (box?.y.y) {
+              view.current.x = box.x;
+              view.current.y = box.y.y;
               setFrozen(true);
               u.redraw(true);
             }
-            u.setSelect({ left: 0, top: 0, width: 0, height: 0 }, false);
           },
         ],
         draw: [(u) => decorateNow.current(u, ink)],
@@ -365,21 +345,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     ctx.save();
     ctx.font = `${10 * r}px monospace`;
     if (d.mode === "time" && d.cursors) {
-      d.cursors.forEach((t, i) => {
-        const x = u.valToPos(t, "x", true);
-        if (x < left || x > left + width) return;
-        ctx.strokeStyle = ink;
-        ctx.setLineDash([3 * r, 3 * r]);
-        ctx.beginPath();
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, top + height);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = ink;
-        ctx.fillRect(x - 6 * r, top, 12 * r, 13 * r);
-        ctx.fillStyle = screen;
-        ctx.fillText(String(i + 1), x - 3 * r, top + 10 * r);
-      });
+      drawXCursors(ctx, u, d.cursors, { labels: ["1", "2"], ink, screenBg: screen, r });
     }
     if (d.mode === "time" && d.trigger) {
       const signal = getComputedStyle(u.root).getPropertyValue("--trace-1").trim() || "#ff6a30";
@@ -458,7 +424,7 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     const p = local(e);
     const min = u.scales.x.min ?? 0, max = u.scales.x.max ?? 1;
     const ymin = u.scales.y.min ?? 0, ymax = u.scales.y.max ?? 1;
-    const near = cursors?.findIndex((t) => Math.abs(u.valToPos(t, "x") - p.x) < 7) ?? -1;
+    const near = nearXCursor(u, cursors, p.x);
     const trig = settings.trigger;
     if (near >= 0) drag.current = { kind: "cursor", i: near, x0: p.x, min, max };
     else if (trig && p.x > p.w - 18 && Math.abs(u.valToPos(trig.level, scaleOf(channels.find((c) => c.id === trig.source)?.unit)) - p.y) < 9)
@@ -474,10 +440,8 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
     const p = local(e);
     if (d.kind === "pan") {
       // Both axes move with the pointer: a zoomed y view pans up and down too.
-      const dx = ((p.x - d.x0) * (d.max - d.min)) / p.w;
-      const dy = ((p.y - (d.y0 ?? p.y)) * ((d.ymax ?? 0) - (d.ymin ?? 0))) / p.h;
-      view.current.x = [d.min - dx, d.max - dx];
-      view.current.y = [(d.ymin ?? 0) + dy, (d.ymax ?? 0) + dy];
+      view.current.x = panXRange(d.min, d.max, p.x - d.x0, p.w);
+      view.current.y = panYRange(d.ymin ?? 0, d.ymax ?? 0, p.y - (d.y0 ?? p.y), p.h, { log: !!settings.ylog });
       if (!frozen) setFrozen(true); // panning back in time freezes the Scope
       u.redraw(true);
     } else if (d.kind === "cursor" && cursors) {
@@ -506,10 +470,10 @@ export function Scope({ name, channels, version, live, settings, onSettings, sma
       const f = e.deltaY > 0 ? 1.25 : 0.8;
       if (e.shiftKey) {
         const at = u.posToVal(p.y, "y"), [a, b] = [u.scales.y.min ?? 0, u.scales.y.max ?? 1];
-        view.current.y = [at - (at - a) * f, at + (b - at) * f];
+        view.current.y = zoomRangeAround(a, b, at, f, !!settings.ylog);
       } else {
         const at = u.posToVal(p.x, "x"), [a, b] = [u.scales.x.min ?? 0, u.scales.x.max ?? 1];
-        view.current.x = [at - (at - a) * f, at + (b - at) * f];
+        view.current.x = zoomRangeAround(a, b, at, f);
         if (!isFrozen) liveWindow.current = view.current.x[1] - view.current.x[0]; // zooming while live keeps following, with the new window
       }
       u.redraw(true);

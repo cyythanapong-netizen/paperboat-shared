@@ -8,7 +8,17 @@ import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js
 const SIZE = 96;
 const MARGIN = 8;
 const HOME = 26; // the Home key's size
+const COMPACT_IDLE = 44;
+const COMPACT_HOVER = 84;
+const COMPACT_MARGIN = 6;
+const COMPACT_HOME = 20;
+const COMPACT_IDLE_ALPHA = 0.28;
 const THIRD = 1 / 3;
+
+export type ViewCubeOptions = {
+  /** Compact 3D plot mode: smaller & semi-transparent at rest, expanding & brightening on hover. */
+  compact?: boolean;
+};
 
 /**
  * A view cube in the scene's top-right corner, as in a CAD tool: it shows the camera's
@@ -24,21 +34,34 @@ export function viewCube(
   getCamera: THREE.PerspectiveCamera | THREE.OrthographicCamera | (() => THREE.PerspectiveCamera | THREE.OrthographicCamera),
   controls: OrbitControls,
   token: (name: string, fallback: string) => string,
+  options?: ViewCubeOptions,
 ) {
+  const compact = Boolean(options?.compact);
+  const margin = compact ? COMPACT_MARGIN : MARGIN;
+  const homeSize = compact ? COMPACT_HOME : HOME;
+  const idleSize = compact ? COMPACT_IDLE : SIZE;
+  const hoverSize = compact ? COMPACT_HOVER : SIZE;
+  const idleAlpha = compact ? COMPACT_IDLE_ALPHA : 1;
+
   const getCam = () => (typeof getCamera === "function" ? getCamera() : getCamera);
   const home = { position: getCam().position.clone(), target: controls.target.clone() };
 
   // The cube is a wireframe: faint faces for picking, ink edges, and the x/y/z axes on the
   // negative vertex. It turns with the scene camera, so the face shown is the view you are on.
   const scene = new THREE.Scene();
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: token("--line-ink", "#111111"), transparent: true, opacity: 0.03, depthWrite: false }),
-  );
-  const edges = new THREE.LineSegments(
-    new THREE.EdgesGeometry(cube.geometry),
-    new THREE.LineBasicMaterial({ color: token("--text-muted", "#8a8a84") }),
-  );
+  const faceMat = new THREE.MeshBasicMaterial({
+    color: token("--line-ink", "#111111"),
+    transparent: true,
+    opacity: compact ? 0.015 : 0.03,
+    depthWrite: false,
+  });
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), faceMat);
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: token("--text-muted", "#8a8a84"),
+    transparent: compact,
+    opacity: idleAlpha,
+  });
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(cube.geometry), edgeMat);
 
   const label = (text: string, color: string): THREE.Sprite => {
     const canvas = document.createElement("canvas");
@@ -51,7 +74,9 @@ export function viewCube(
     g.fillText(text, 32, 34);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: idleAlpha, depthTest: false }),
+    );
     sprite.scale.set(0.28, 0.28, 1);
     return sprite;
   };
@@ -61,16 +86,32 @@ export function viewCube(
     { dir: [0, 1, 0], name: "y", color: "#30a46c" },
     { dir: [0, 0, 1], name: "z", color: "#3e63dd" },
   ];
+  const shaftLen = 0.90;
+  const headLen = 0.16;
+  const shaftGeom = new THREE.CylinderGeometry(0.022, 0.022, shaftLen, 12);
+  const headGeom = new THREE.ConeGeometry(0.056, headLen, 12);
+  const up = new THREE.Vector3(0, 1, 0);
   const axes = axisSpecs.map(({ dir, name, color }) => {
     const v = new THREE.Vector3(...dir);
-    const arrow = new THREE.ArrowHelper(v, origin, 1.05, new THREE.Color(color), 0.12, 0.06);
-    (arrow.line.material as THREE.Material).depthTest = false;
-    (arrow.cone.material as THREE.Material).depthTest = false;
-    arrow.renderOrder = 2;
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(color),
+      depthTest: false,
+      ...(compact ? { transparent: true, opacity: idleAlpha } : {}),
+    });
+    const arrow = new THREE.Group();
+    arrow.position.copy(origin);
+    arrow.quaternion.setFromUnitVectors(up, v);
+    const shaft = new THREE.Mesh(shaftGeom, mat);
+    shaft.position.set(0, shaftLen / 2, 0);
+    shaft.renderOrder = 2;
+    const cone = new THREE.Mesh(headGeom, mat);
+    cone.position.set(0, shaftLen + headLen / 2, 0);
+    cone.renderOrder = 2;
+    arrow.add(shaft, cone);
     const sprite = label(name, color);
-    sprite.position.copy(origin).add(v.clone().multiplyScalar(1.16));
+    sprite.position.copy(origin).add(v.clone().multiplyScalar(1.18));
     scene.add(arrow, sprite);
-    return { arrow, sprite };
+    return { mat, sprite };
   });
   // Where a click would turn the camera: the third of the cube it is over.
   const mark = new THREE.Mesh(
@@ -80,19 +121,20 @@ export function viewCube(
   mark.visible = false;
   mark.renderOrder = 1;
   scene.add(cube, edges, mark);
+  const eyeDist = compact ? 4.8 : 4;
   const eye = new THREE.PerspectiveCamera(30, 1, 0.1, 10);
 
   // The overlay over the cube's corner, and the Home key under it.
   const overlay = document.createElement("div");
-  overlay.className = "view-cube";
-  overlay.style.cssText = `position:absolute;top:${MARGIN}px;right:${MARGIN}px;width:${SIZE}px;height:${SIZE}px;touch-action:none;`;
+  overlay.className = `view-cube${compact ? " compact" : ""}`;
+  overlay.style.cssText = `position:absolute;top:${margin}px;right:${margin}px;width:${idleSize}px;height:${idleSize}px;touch-action:none;`;
   const homeKey = document.createElement("button");
   // A round key with a house, centred under the cube; greyed while the view is already home.
-  homeKey.className = "key small view-cube-home at-home";
+  homeKey.className = `key small view-cube-home at-home${compact ? " compact" : ""}`;
   homeKey.setAttribute("aria-label", "Home");
   homeKey.title = "Home: back to the opening view";
   homeKey.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7.5L8 3l5.5 4.5M4 6.5V13h3V9.5h2V13h3V6.5"/></svg>';
-  homeKey.style.cssText = `position:absolute;top:${MARGIN + SIZE + 6}px;right:${MARGIN + (SIZE - HOME) / 2}px;`;
+  homeKey.style.cssText = `position:absolute;top:${margin + idleSize + 4}px;right:${margin + (idleSize - homeSize) / 2}px;${compact ? `opacity:${idleAlpha};` : ""}`;
   host.append(overlay, homeKey);
 
   // Turning the camera: the offset from the target eases to a new direction.
@@ -142,7 +184,38 @@ export function viewCube(
   };
 
   let press: { x: number; y: number; moved: boolean } | null = null;
+  let overCube = false;
+  let overHome = false;
+  let hovered = false;
+  let leaveTimer: number | null = null;
+  let curSize = idleSize;
+  let curAlpha = idleAlpha;
+  let appliedSz = -1;
+  let appliedAlpha = -1;
+
+  const setHovered = () => {
+    if (leaveTimer !== null) {
+      window.clearTimeout(leaveTimer);
+      leaveTimer = null;
+    }
+    const next = overCube || overHome || Boolean(press);
+    if (next) {
+      hovered = true;
+    } else {
+      leaveTimer = window.setTimeout(() => {
+        leaveTimer = null;
+        if (!overCube && !overHome && !press) hovered = false;
+      }, 80);
+    }
+  };
+
+  overlay.addEventListener("pointerenter", () => {
+    overCube = true;
+    setHovered();
+  });
   overlay.addEventListener("pointermove", (e) => {
+    overCube = true;
+    setHovered();
     if (press) {
       const dx = e.clientX - press.x;
       const dy = e.clientY - press.y;
@@ -165,10 +238,12 @@ export function viewCube(
   overlay.addEventListener("pointerdown", (e) => {
     overlay.setPointerCapture(e.pointerId);
     press = { x: e.clientX, y: e.clientY, moved: false };
+    setHovered();
   });
   overlay.addEventListener("pointerup", (e) => {
     const was = press;
     press = null;
+    setHovered();
     if (overlay.hasPointerCapture(e.pointerId)) overlay.releasePointerCapture(e.pointerId);
     if (was && !was.moved) {
       const d = direction(e);
@@ -176,7 +251,17 @@ export function viewCube(
     }
   });
   overlay.addEventListener("pointerleave", () => {
+    overCube = false;
+    setHovered();
     if (!press) mark.visible = false;
+  });
+  homeKey.addEventListener("pointerenter", () => {
+    overHome = true;
+    setHovered();
+  });
+  homeKey.addEventListener("pointerleave", () => {
+    overHome = false;
+    setHovered();
   });
   homeKey.addEventListener("click", () => goTo(home.position, home.target));
 
@@ -184,15 +269,42 @@ export function viewCube(
     /** Draw the cube over the scene just rendered, `width` x `height` px. */
     draw(width: number, height: number) {
       step();
+      // Keep the compact cube strictly contained inside small plots, shrinking & dimming when idle.
+      const maxFit = compact ? Math.max(28, Math.floor(Math.min(width, height) * 0.42)) : hoverSize;
+      const targetSz = Math.min(hovered ? hoverSize : idleSize, maxFit);
+      const targetAlpha = hovered ? 1 : idleAlpha;
+      const rate = reduced() ? 1 : 0.22;
+      curSize = Math.abs(targetSz - curSize) < 0.25 ? targetSz : curSize + (targetSz - curSize) * rate;
+      curAlpha = Math.abs(targetAlpha - curAlpha) < 0.01 ? targetAlpha : curAlpha + (targetAlpha - curAlpha) * rate;
+
+      const sz = Math.round(curSize);
+      if (sz !== appliedSz) {
+        appliedSz = sz;
+        overlay.style.width = `${sz}px`;
+        overlay.style.height = `${sz}px`;
+        homeKey.style.top = `${margin + sz + 4}px`;
+        homeKey.style.right = `${margin + Math.round((sz - homeSize) / 2)}px`;
+      }
+      if (compact && Math.abs(curAlpha - appliedAlpha) > 0.005) {
+        appliedAlpha = curAlpha;
+        edgeMat.opacity = curAlpha;
+        faceMat.opacity = 0.015 + (0.06 - 0.015) * ((curAlpha - idleAlpha) / Math.max(1 - idleAlpha, 1e-4));
+        for (const { mat, sprite } of axes) {
+          mat.opacity = curAlpha;
+          sprite.material.opacity = curAlpha;
+        }
+        homeKey.style.opacity = curAlpha.toFixed(2);
+      }
+
       const atHome = getCam().position.distanceToSquared(home.position) < 1e-6 && controls.target.distanceToSquared(home.target) < 1e-6;
       if (atHome !== homeKey.classList.contains("at-home")) homeKey.classList.toggle("at-home", atHome);
       // The cube's camera looks at it from where the scene's camera looks at its target.
       eye.quaternion.copy(getCam().quaternion);
-      eye.position.set(0, 0, 4).applyQuaternion(getCam().quaternion);
-      const x = width - SIZE - MARGIN;
-      const y = height - SIZE - MARGIN; // from the bottom edge
-      renderer.setViewport(x, y, SIZE, SIZE);
-      renderer.setScissor(x, y, SIZE, SIZE);
+      eye.position.set(0, 0, eyeDist).applyQuaternion(getCam().quaternion);
+      const x = Math.max(margin, width - sz - margin);
+      const y = Math.max(margin, height - sz - margin); // from the bottom edge
+      renderer.setViewport(x, y, sz, sz);
+      renderer.setScissor(x, y, sz, sz);
       renderer.setScissorTest(true);
       renderer.clearDepth();
       renderer.render(scene, eye);
@@ -200,14 +312,17 @@ export function viewCube(
       renderer.setViewport(0, 0, width, height);
     },
     dispose() {
+      if (leaveTimer !== null) window.clearTimeout(leaveTimer);
       overlay.remove();
       homeKey.remove();
       cube.geometry.dispose();
       (cube.material as THREE.Material).dispose();
       edges.geometry.dispose();
       (edges.material as THREE.Material).dispose();
-      for (const { arrow, sprite } of axes) {
-        arrow.dispose();
+      shaftGeom.dispose();
+      headGeom.dispose();
+      for (const { mat, sprite } of axes) {
+        mat.dispose();
         sprite.material.map?.dispose();
         sprite.material.dispose();
       }

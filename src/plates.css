@@ -232,6 +232,8 @@ span.msg-source { cursor: default; }
 /* The view cube's Home key (viewCube.ts): round, a house, greyed while the view is already home. */
 .key.view-cube-home, .key.small.view-cube-home { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: var(--radius-round); transition: color var(--motion), border-color var(--motion), opacity var(--motion); }
 .view-cube-home svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.key.view-cube-home.compact, .key.small.view-cube-home.compact { width: 20px; height: 20px; }
+.view-cube-home.compact svg { width: 12px; height: 12px; }
 .view-cube-home.at-home { color: var(--text-muted); border-color: var(--line); }
 
 /* ---- Solver settings (SolverSettings.tsx): solvers by family on the left, options by group. */

@@ -265,6 +265,8 @@ export type Entity = {
   overlay?: boolean;
   /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
+  /** The field's colour map: parula, viridis, jet, hot, gray, cool, spring, summer, autumn, winter, bone, copper, pink (absent: viridis). */
+  colormap?: string;
 };
 
 /** Camera hint sent with a scene. 2d: orthographic, looking down -z at center, height units tall. */
@@ -502,6 +504,8 @@ export type EntityPatch = {
   overlay?: boolean;
   /** The values that take the low and high ends of the colour scale; absent: the field's own min and max. */
   range?: [number, number];
+  /** The field's colour map: parula, viridis, jet, hot, gray, cool, spring, summer, autumn, winter, bone, copper, pink (absent: viridis). */
+  colormap?: string;
 };
 
 /** One form of a magic block: the ports it has in that form (signal: computes; step: branches on a Step flow's path). The block's form param picks one. */

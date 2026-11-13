@@ -9,6 +9,7 @@ runtime or Modelica.
 | Controls and menus | `Menus.tsx`, `commands.ts`, `NumberField.tsx`, `Dock.tsx` |
 | Blocks and ports | `Compact.tsx`, `Icon.tsx` + `icon.ts` (the `view.icon` primitive renderer), `portLayout.tsx`, `ports.ts` (wire rules for causal and acausal/Modelica connectors), `wireSnap.tsx`, `wireRouting.ts` (square routes, both canvases), `wireBends.tsx` (draggable wire segments) |
 | Scope and instruments | `Dashboard.tsx`, `dashboardLayout.ts` |
+| Plots | `src/plot/`: `Plot2D`, `HeatFigure`, `Colorbar`, `TexText` (MATLAB figures) and the shared `Scope`/`Sparkline` |
 | Shell | `Shell.tsx`, `Logo.tsx` |
 | Dismissal | `dismiss.tsx` (`useDismiss`, `useFocusReturn`): an outside press or Escape closes a floating surface, with a single layer stack for nested popovers |
 | Canvas utilities | `undo.ts`, `clipboard.ts`, `graphLayout.ts` |
@@ -33,7 +34,12 @@ import "@paperboat/shared/tokens.css";
 import "@paperboat/shared/plates.css";
 ```
 
-Also exported: `@paperboat/shared/icon` and `@paperboat/shared/fixtures/icons` (icon test fixtures).
+Also exported: `@paperboat/shared/icon`, `@paperboat/shared/fixtures/icons` (icon test fixtures), and
+`@paperboat/shared/plot` (`Plot2D`, `HeatFigure`, `Colorbar`, `TexText`, `Scope`, `Sparkline`).
+
+```ts
+import { Plot2D } from "@paperboat/shared/plot";
+```
 
 ## Dismissal
 
