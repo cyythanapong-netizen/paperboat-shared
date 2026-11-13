@@ -266,3 +266,9 @@ span.msg-source { cursor: default; }
 .solver-field .num { width: 100%; }
 .solver-undo:disabled { visibility: hidden; }
 .solver-foot { display: flex; justify-content: flex-end; gap: 8px; padding: var(--space-2) var(--space-3); border-top: 1px solid var(--line); }
+
+/* GlideBrackets (Shell.tsx) draws the chosen option's [ ] as two absolute spans: without these the
+   spans sit inline after the last option as a stray "[ ]". */
+.glide { position: relative; }
+.glide .opt::before, .glide .opt::after { visibility: hidden !important; }
+.glide-bracket { position: absolute; display: flex; align-items: center; pointer-events: none; opacity: 0; white-space: pre; }

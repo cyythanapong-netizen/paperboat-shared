@@ -80,7 +80,12 @@
       "types": "./src/files/index.ts",
       "default": "./src/files/index.ts"
     },
-    "./files.css": "./src/files/files.css"
+    "./files.css": "./src/files/files.css",
+    "./squero": {
+      "types": "./src/squero/index.ts",
+      "default": "./src/squero/index.ts"
+    },
+    "./squero.css": "./src/squero/squero.css"
   },
   "peerDependencies": {
     "three": ">=0.187.0"
