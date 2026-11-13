@@ -1,6 +1,6 @@
 /**
- * The Squero Studio logo (squero#42): W3 Water wordmark with the B3 Mono product badge.
- * Rendered as an inline SVG derived from module m = 13px (Geist 600 stem width at 100px).
+ * The Squero Studio logo, `squero [om]`: "squero" over its five water dots, the product code in
+ * bold ink brackets. Inline SVG; the geometry is in logo.ts.
  */
 
 import {
@@ -8,7 +8,7 @@ import {
   WATER_DOTS,
   WATER_Y,
   DOT_SIZE,
-  BADGE_GEOMETRY,
+  TAG_GEOMETRY,
   type SqueroLogoProps,
   logoWidth,
 } from "./logo.ts";
@@ -37,16 +37,6 @@ export function SqueroLogo({ product = "OM", height = 20, running = false }: Squ
       >
         squero
       </text>
-      <text
-        x={358.2}
-        y={0}
-        className="squero-logo-muted"
-        fontFamily="var(--font-sans)"
-        fontWeight={400}
-        fontSize={100}
-      >
-        studio
-      </text>
       <g className="squero-logo-water" shapeRendering="crispEdges">
         {WATER_DOTS.map((x, i) => (
           <g key={i} className={`w w${i + 1}`}>
@@ -54,24 +44,16 @@ export function SqueroLogo({ product = "OM", height = 20, running = false }: Squ
           </g>
         ))}
       </g>
-      <g transform={`translate(${BADGE_GEOMETRY.x} ${BADGE_GEOMETRY.y})`}>
-        <rect
-          width={BADGE_GEOMETRY.size}
-          height={BADGE_GEOMETRY.size}
-          rx={BADGE_GEOMETRY.radius}
-          className="squero-logo-tile"
-        />
-        <text
-          x={BADGE_GEOMETRY.codeX}
-          y={BADGE_GEOMETRY.codeY}
-          className="squero-logo-code"
-          fontFamily="var(--font-mono)"
-          fontWeight={600}
-          fontSize={BADGE_GEOMETRY.codeFontSize}
-        >
-          {product}
-        </text>
-      </g>
+      <text
+        x={TAG_GEOMETRY.x}
+        y={0}
+        className="squero-logo-ink"
+        fontFamily="var(--font-mono)"
+        fontWeight={600}
+        fontSize={TAG_GEOMETRY.fontSize}
+      >
+        [{product.toLowerCase()}]
+      </text>
     </svg>
   );
 }
