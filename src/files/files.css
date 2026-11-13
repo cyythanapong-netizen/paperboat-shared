@@ -1,4 +1,4 @@
-/* The Files tree, shared by Squero Studio OM and MX. The app owns the rail, tabs and head. */
+/* The Files tree and the rail around it (FileRail), shared by Squero Studio OM and MX. */
 .files-tree { flex: 1; min-height: 0; overflow: auto; padding: 4px 0; }
 .file-row {
   display: flex; align-items: center; gap: 4px;
@@ -29,3 +29,44 @@
 .file-menu button:hover { background: var(--surface-sunken); }
 .file-menu button.danger { color: var(--danger-text); }
 .file-menu hr { border: 0; border-top: 1px solid var(--line); margin: 5px 4px; }
+
+/* The rail: tab strip, body (the files panel and any other tab), and a standing tab when folded.
+   The app places the rail and sizes it; folded, it should give the rail ~30px. */
+.rail { position: relative; display: flex; flex-direction: column; min-height: 0; }
+.rail-tabs { display: flex; align-items: center; gap: var(--space-3); min-height: var(--panel-head-height); padding: 0 var(--space-3); border-bottom: 1px solid var(--line); background: var(--surface-raised); }
+.rail-tab { border: 0; background: none; padding: 0; font: 400 var(--size-2xs) var(--font-mono); color: var(--text-muted); cursor: pointer; }
+.rail-tab:hover { color: var(--text); }
+.rail-tab.on { color: var(--text); font-weight: 500; }
+.rail-tab.on::before { content: "[ "; }
+.rail-tab.on::after { content: " ]"; }
+.rail-add { margin-left: auto; height: 20px; padding: 0 6px; }
+.rail-add + .panel-toggle { margin-left: 2px; }
+.rail-tab + .panel-toggle { margin-left: auto; }
+.rail-body { flex: 1; min-height: 0; display: flex; min-width: 0; }
+.rail-body > [hidden] { display: none; }
+.files-panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.files-head { display: flex; align-items: baseline; gap: var(--space-2); padding: 8px var(--space-3) 4px; border-bottom: 1px solid var(--line); }
+.files-head .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 var(--size-xs) var(--font-mono); }
+.files-head .lbl { margin-left: auto; white-space: nowrap; }
+.files-foot { margin: 0; padding: 6px var(--space-3); border-top: 1px solid var(--line); font: 400 11px var(--font-mono); color: var(--text-muted); }
+
+/* Fold: the chevron in the strip, and the standing tab that brings the rail back. */
+.panel-toggle { flex: none; width: 18px; height: 18px; padding: 0; border: 0; background: none; color: var(--text-muted); display: inline-grid; place-items: center; cursor: pointer; }
+.panel-toggle:hover { color: var(--text); }
+.panel-toggle svg, .panel-stand svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.panel-stand {
+  position: absolute; inset: 4px; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 7px 0;
+  border: 0; border-radius: var(--radius-md); background: var(--surface-raised);
+  color: var(--text-muted); cursor: pointer; font: inherit;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity var(--motion), visibility 0s linear 150ms;
+}
+.panel-stand:hover { color: var(--text); }
+.panel-stand span { writing-mode: vertical-rl; font: 400 10.5px var(--font-mono); letter-spacing: .04em; text-transform: lowercase; }
+.rail > .rail-tabs, .rail > .rail-body { transition: opacity var(--motion); }
+.rail.collapsed > .rail-tabs, .rail.collapsed > .rail-body { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--motion), visibility 0s linear 150ms; }
+.rail.collapsed > .panel-stand { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--motion), visibility 0s; }
+@media (prefers-reduced-motion: reduce) {
+  .rail > .rail-tabs, .rail > .rail-body, .panel-stand { transition: none !important; }
+}
