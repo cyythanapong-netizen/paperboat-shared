@@ -39,9 +39,11 @@ export function Dock({
       </button>
       {optionsSlot}
       {controlsSlot}
-      {/* The slot is always there, holding room for its widest label, so the keys beside it never move. */}
-      <span className={`run-status${status ? ` status-${status}` : ""}`} aria-live="polite" aria-atomic="true">
-        {status ? statusText : <span className="run-status-room" aria-hidden="true">running 000.0 / 000 s</span>}
+      {/* Where the run is, when there is one. The slot stays mounted so its first word is announced,
+          but it takes no room while it has nothing to say: a hidden placeholder left a blank patch
+          beside Cancel (#341). A replay key or variable controls already widen the dock, so a run may. */}
+      <span className={`run-status${status ? ` status-${status}` : " run-status-empty"}`} aria-live="polite" aria-atomic="true">
+        {status ? statusText : null}
       </span>
     </div>
   );
