@@ -2,34 +2,33 @@
 // attributes, and its optional field (values) as vertex colours on a viridis-like scale.
 import * as THREE from "three";
 import type { Entity } from "../protocol.ts";
+import { sampleColormap } from "../plot/colormaps.ts";
 
-// Viridis at five stops, sRGB: low (dark blue) to high (yellow).
-const STOPS = [
-  [0x44, 0x01, 0x54],
-  [0x3b, 0x52, 0x8b],
-  [0x21, 0x91, 0x8c],
-  [0x5e, 0xc9, 0x62],
-  [0xfd, 0xe7, 0x25],
-];
-
-const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+export const srgbToLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
 /** Linear RGB per value (what three.js wants for vertex colours), from low to high. */
-export function fieldColors(values: number[], range?: [number, number]): Float32Array {
+export function fieldColors(
+  values: ArrayLike<number>,
+  range?: [number, number],
+  colormap?: string | readonly (readonly number[])[],
+): Float32Array {
   let [lo, hi] = range && range[1] > range[0] ? range : [Infinity, -Infinity];
-  if (!(range && range[1] > range[0]))
-    for (const v of values) {
+  if (!(range && range[1] > range[0])) {
+    for (let i = 0; i < values.length; i++) {
+      const v = values[i];
+      if (!Number.isFinite(v)) continue;
       if (v < lo) lo = v;
       if (v > hi) hi = v;
     }
+  }
   const span = hi > lo ? hi - lo : 1;
   const out = new Float32Array(values.length * 3);
   for (let i = 0; i < values.length; i++) {
     const f = Math.min(1, Math.max(0, (values[i] - lo) / span)) || 0;
-    const x = f * (STOPS.length - 1);
-    const k = Math.min(STOPS.length - 2, Math.floor(x));
-    const t = x - k;
-    for (let c = 0; c < 3; c++) out[i * 3 + c] = toLinear((STOPS[k][c] + (STOPS[k + 1][c] - STOPS[k][c]) * t) / 255);
+    const [r, g, b] = sampleColormap(colormap, f);
+    out[i * 3] = srgbToLinear(r / 255);
+    out[i * 3 + 1] = srgbToLinear(g / 255);
+    out[i * 3 + 2] = srgbToLinear(b / 255);
   }
   return out;
 }
@@ -57,7 +56,7 @@ const idOf = (v: unknown) => {
 };
 
 /** What a mesh's geometry is built from: its arrays' identities, and whether it has a field. */
-export const meshLook = (e: Entity) => [idOf(e.vertices), idOf(e.indices), e.values !== undefined];
+export const meshLook = (e: Entity) => [idOf(e.vertices), idOf(e.indices), e.values !== undefined, e.colormap];
 
 export function meshGeometry(e: Entity): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
@@ -73,12 +72,12 @@ export function meshGeometry(e: Entity): THREE.BufferGeometry {
 
 /** Colours the mesh by its field, when the field or its colour range is new. */
 export function paintField(geometry: THREE.BufferGeometry, e: Entity) {
-  const last = geometry.userData.field as { values?: Entity["values"]; lo?: number; hi?: number } | undefined;
-  if (e.values === undefined || (last && last.values === e.values && last.lo === e.range?.[0] && last.hi === e.range?.[1]))
+  const last = geometry.userData.field as { values?: Entity["values"]; lo?: number; hi?: number; colormap?: string } | undefined;
+  if (e.values === undefined || (last && last.values === e.values && last.lo === e.range?.[0] && last.hi === e.range?.[1] && last.colormap === e.colormap))
     return;
-  geometry.userData.field = { values: e.values, lo: e.range?.[0], hi: e.range?.[1] };
+  geometry.userData.field = { values: e.values, lo: e.range?.[0], hi: e.range?.[1], colormap: e.colormap };
   const values = asFloat32(e.values);
   const n = geometry.getAttribute("position")?.count ?? 0;
   if (!values || values.length !== n) return;
-  geometry.setAttribute("color", new THREE.BufferAttribute(fieldColors(Array.from(values), e.range), 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(fieldColors(Array.from(values), e.range, e.colormap), 3));
 }

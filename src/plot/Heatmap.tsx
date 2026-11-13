@@ -2,17 +2,20 @@
 // It is a shared plot primitive so a Studio never carries its own chart renderer.
 import { useEffect, useMemo, useRef } from "react";
 import "./plot.css";
+import { sampleColormap } from "./colormaps.ts";
 
 export type HeatmapProps = {
   /** Row-major values; the first row is the top of the image. */
   values: readonly (readonly number[])[];
   /** The colour domain; the data's min/max when omitted. */
   range?: readonly [number, number];
+  /** A MATLAB colour map name (parula, jet, hot, gray, …) or an n × 3 matrix; viridis when omitted. */
+  colormap?: string | readonly (readonly number[])[];
 };
 
 const viridis = (t: number) => `hsl(${250 - t * 190}, ${60 + t * 20}%, ${20 + t * 45}%)`;
 
-export function Heatmap({ values, range }: HeatmapProps) {
+export function Heatmap({ values, range, colormap }: HeatmapProps) {
   const host = useRef<HTMLCanvasElement>(null);
   const domain = useMemo<[number, number]>(() => {
     if (range) return [range[0], range[1]];
@@ -42,7 +45,7 @@ export function Heatmap({ values, range }: HeatmapProps) {
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
           const t = Math.min(1, Math.max(0, (values[j][i] - lo) / span));
-          g.fillStyle = viridis(t);
+          g.fillStyle = colormap ? `rgb(${sampleColormap(colormap, t).map(Math.round).join(" ")})` : viridis(t);
           g.fillRect((i * width) / cols, (j * height) / rows, width / cols + 1, height / rows + 1);
         }
       }
@@ -51,7 +54,7 @@ export function Heatmap({ values, range }: HeatmapProps) {
     const observer = new ResizeObserver(draw);
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, [values, domain]);
+  }, [values, domain, colormap]);
 
   return <canvas ref={host} className="pb-heatmap" aria-label="heatmap" />;
 }
