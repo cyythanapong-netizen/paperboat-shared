@@ -219,6 +219,12 @@ span.msg-source { cursor: default; }
   background: var(--surface-float); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur);
   border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
 }
+/* The dock's status (#341): its clock keeps tabular figures, so counting up does not nudge the keys.
+   Scoped to the dock because the apps' own `.run-status` rule resets font-variant with `font`. */
+.dock .run-status { font-variant-numeric: tabular-nums; }
+/* Nothing to report yet: the live region stays mounted (so its first word is announced) but takes no
+   room, so the dock ends at its keys instead of a blank patch beside Cancel. */
+.run-status.run-status-empty { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* A key as a pill: Ctrl+Z, Esc. */
 .kbd { font: 500 var(--size-2xs) var(--font-mono); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: var(--radius-sm); padding: 0 5px; margin: 0 1px; color: var(--text); background: var(--surface-raised); white-space: nowrap; }
