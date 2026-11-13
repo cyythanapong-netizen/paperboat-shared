@@ -1,13 +1,10 @@
-/* Squero Studio shell, shared by OM and MX: the logo (W3 Water + B3 Mono badge; squero#42), the
+/* Squero Studio shell, shared by OM and MX: the logo (`squero [om]`: water wordmark + bracketed product; squero#42), the
    busy wave, modals and the About dialog. Needs tokens.css. */
 
 .wordmark { display: inline-flex; align-items: center; }
 .squero-logo { display: block; overflow: visible; }
 .squero-logo-ink { fill: var(--text); }
-.squero-logo-muted { fill: var(--text-muted); }
 .squero-logo-water { fill: var(--signal); }
-.squero-logo-tile { fill: var(--text); }
-.squero-logo-code { fill: var(--surface-panel); }
 .squero-logo .w { transform-box: fill-box; transform-origin: center; }
 /* Idle: a ripple every 5 s. Live: a continuous 1.4 s ripple while something runs. */
 .squero-logo.logo-idle .squero-logo-water .w { animation: squero-ripple-idle 5s var(--ease) infinite; }

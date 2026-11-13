@@ -1,39 +1,36 @@
 /**
- * Geometry and specifications for the Squero Studio logo (squero#42).
+ * Geometry for the Squero Studio logo: "squero" over its water, the product in brackets, `squero [om]`.
  *
- * Everything is derived from module m = 13px (stem width of Geist 600 "H" at 100px font-size):
- * - Wordmark: "squero" Geist 600 ink, word space, "studio" Geist 400 muted.
- * - Water: 5 square dots of 1.5m (19.5px) in --signal, spread evenly from first to last ink of "squero".
- *   Sitting at descender(q) + lift + 0.5m (35.6px), so at the top of ripple it never touches "q".
- * - Badge: square ink tile with radius 1m (13px), height matching the wordmark block (top of "d"
- *   to bottom of dots = 127.1px), placed 3m (39px) after "studio".
- *   The product code is in Geist Mono 600, paper color, centered on its ink.
+ * Everything is in font units at font-size 100, from module m = 13 (stem width of Geist 600 "H"):
+ * - Wordmark: "squero" Geist 600 ink at x 0, baseline 0 (advance 333).
+ * - Water: 5 square dots of 1.5m (19.5) in --signal, spread evenly under "squero".
+ *   Sitting at descender(q) + lift + 0.5m (35.565), so at the top of ripple it never touches "q".
+ * - Tag: the product code, lowercase, in bold ink brackets ("a chosen option sits in brackets in
+ *   bold ink", DESIGN.md): Geist Mono 600 at font-size 100 on the same baseline. Mono and Sans share
+ *   an x-height, so the code sits on the wordmark's x-line. One word space after "squero" (x 357),
+ *   which puts the "[" ink 3m after the "o" ink.
+ * - Block: top of "[" (−75) to the bottom of the water (55.065).
  * - Ripple motion: idle ripple every 5 s; live continuous ripple (1.4 s) when running.
  *   Turned off under prefers-reduced-motion.
  */
 
 export const STEM_M = 13;
 
-export const SQUERO_LOGO_VIEWBOX = {
-  x: 0,
-  y: -72,
-  width: 811.2,
-  height: 127.1,
-} as const;
-
 export const WATER_DOTS = [0, 78.375, 156.75, 235.125, 313.5] as const;
 export const WATER_Y = 35.565;
 export const DOT_SIZE = 19.5; // 1.5 * m
 export const RIPPLE_LIFT = 13.065; // 0.67 * DOT_SIZE
 
-export const BADGE_GEOMETRY = {
-  x: 684.1,
-  y: -72,
-  size: 127.1,
-  radius: 13, // 1 * m
-  codeX: 29.2,
-  codeY: 84.1,
-  codeFontSize: 57.18,
+export const TAG_GEOMETRY = {
+  x: 357, // "squero" advance 333 + one word space 24
+  fontSize: 100,
+} as const;
+
+export const SQUERO_LOGO_VIEWBOX = {
+  x: 0,
+  y: -75, // top of "["
+  width: 585, // right ink of "]"
+  height: 75 + WATER_Y + DOT_SIZE,
 } as const;
 
 export type SqueroLogoProps = {

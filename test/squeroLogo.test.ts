@@ -7,7 +7,7 @@ import {
   WATER_Y,
   DOT_SIZE,
   RIPPLE_LIFT,
-  BADGE_GEOMETRY,
+  TAG_GEOMETRY,
   logoWidth,
 } from "../src/squero/logo.ts";
 
@@ -31,16 +31,17 @@ test("squero logo: geometry strictly derives from module m = 13 (squero#42)", ()
   const crestY = WATER_Y - lift;
   assert.ok(crestY > qDescender, "at ripple crest, dot stays below q descender");
   assert.ok(Math.abs((crestY - qDescender) - 0.5 * m) < 1e-6, "clearance at crest is exactly 0.5m");
+});
 
-  // Badge (B3 Mono): square ink tile with radius 1m, height matching the wordmark block
-  assert.equal(BADGE_GEOMETRY.radius, 1 * m, "badge radius is 1m");
-  assert.equal(BADGE_GEOMETRY.size, SQUERO_LOGO_VIEWBOX.height, "badge is as tall as wordmark block");
+test("squero logo: the [om] tag follows 'squero' at one word space, ink 3m after the 'o'", () => {
+  // Geist 600 "squero": advance 333, right ink 329; Geist Mono 600 "[": left bearing 12, "]" right ink 228.
+  assert.equal(TAG_GEOMETRY.x, 333 + 24, "one word space after squero");
+  assert.ok(Math.abs(TAG_GEOMETRY.x + 12 - 329 - 3 * STEM_M) <= 1, "[ ink sits 3m after the o ink");
+  assert.equal(SQUERO_LOGO_VIEWBOX.width, TAG_GEOMETRY.x + 228, "viewBox ends at the ] ink");
 
-  // Badge sits 3m after studio
-  const sx = 358.2;
-  const stuR = 286.9;
-  assert.ok(Math.abs(BADGE_GEOMETRY.x - (sx + stuR + 3 * m)) < 1e-4, "badge is set 3m after studio");
+  // Block: top of "[" to the bottom of the water.
+  assert.equal(SQUERO_LOGO_VIEWBOX.y, -75);
+  assert.ok(Math.abs(SQUERO_LOGO_VIEWBOX.y + SQUERO_LOGO_VIEWBOX.height - (WATER_Y + DOT_SIZE)) < 1e-9);
 
-  // Logo width scales with height
-  assert.equal(logoWidth(20), (20 * 811.2) / 127.1, "width calculation preserves aspect ratio");
+  assert.equal(logoWidth(20), (20 * 585) / SQUERO_LOGO_VIEWBOX.height, "width calculation preserves aspect ratio");
 });
