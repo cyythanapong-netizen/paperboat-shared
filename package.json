@@ -21,12 +21,20 @@
     "uplot": "^1.6.32"
   },
   "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.4",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/merge": "^6.12.3",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
     "@types/node": "^22.19.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "typescript": "^7.0.2",
+    "@types/three": "^0.187.0",
     "three": "^0.187.0",
-    "@types/three": "^0.187.0"
+    "typescript": "^7.0.2"
   },
   "exports": {
     ".": {
@@ -85,9 +93,22 @@
       "types": "./src/squero/index.ts",
       "default": "./src/squero/index.ts"
     },
-    "./squero.css": "./src/squero/squero.css"
+    "./squero.css": "./src/squero/squero.css",
+    "./editor": {
+      "types": "./src/editor/index.ts",
+      "default": "./src/editor/index.ts"
+    },
+    "./editor.css": "./src/editor/editor.css"
   },
   "peerDependencies": {
+    "@codemirror/autocomplete": "^6.20.4",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/merge": "^6.12.3",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
     "three": ">=0.187.0"
   },
   "peerDependenciesMeta": {
