@@ -651,6 +651,16 @@ export type BinaryFrameDescriptor = {
   compression?: "none";
 };
 
+/** An analysis a toolkit offers (pb#370): something it computes about a part of the graph on request, outside any run. */
+export type AnalysisDef = {
+  /** "<package>/<analysis>", e.g. "control/linear". */
+  name: string;
+  label: string;
+  description?: string;
+  /** The package (toolkit) that provides it. */
+  group?: string;
+};
+
 /** Every message a backend sends. */
 export type ServerMsg =
   | {
@@ -674,6 +684,8 @@ export type ServerMsg =
     objects?: ObjectDef[];
     connectors?: Connectors;
     dashboard?: DashboardLayout;
+    /** What the imported toolkits can analyse outside the flows (pb#370): offered on a subsystem or a selection. */
+    analyses?: AnalysisDef[];
   }
   | {
     type: "scene";
@@ -802,6 +814,14 @@ export type ServerMsg =
   | {
     type: "toolkits.status";
     toolkits: ToolkitStatus[];
+  }
+  | {
+    type: "analysis.result";
+    id: string;
+    analysis: string;
+    /** The analysis's own shape, read by its toolkit's panel. */
+    result?: unknown;
+    error?: string;
   };
 
 /** Every message the UI sends. */
@@ -859,4 +879,20 @@ export type ClientMsg =
   | {
     type: "toolkit.uninstall";
     name: string;
+  }
+  | {
+    type: "analysis.request";
+    /** The caller's id, echoed in the result: a newer request makes an older answer stale. */
+    id: string;
+    /** An AnalysisDef's name, e.g. "control/linear". */
+    analysis: string;
+    graph: Graph;
+    /** Its inputs fed from outside it (u), as [node, port]. */
+    inputs: [string, string][];
+    /** Its outputs read outside it (y), as [node, port]. */
+    outputs: [string, string][];
+    /** The analysis's own settings, from its panel. */
+    options?: Record<string, unknown>;
+    /** The variables its params use; absent: the last ones set. */
+    variables?: Variables;
   };
