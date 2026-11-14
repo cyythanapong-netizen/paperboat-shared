@@ -1,6 +1,7 @@
 import { Position } from "@xyflow/react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { isRef } from "./bindings.ts";
+import { polynomial } from "./poly.ts";
 import { useDismiss } from "./dismiss.tsx";
 import { Icon } from "./Icon.tsx";
 import { iconValid, plateSize } from "./icon.ts";
@@ -22,9 +23,17 @@ export function Glyph({ name }: { name: string }) {
 const show = (v: ParamValue | undefined) =>
   isRef(v) ? ("var" in v ? v.var : `ƒ ${v.expr}`) : typeof v === "number" ? String(+v.toFixed(4)).replace("-", "−") : typeof v === "boolean" ? (v ? "on" : "off") : String(v ?? "");
 
-/** The caption's value: `{k}` and `{min}…{max}` with the block's params filled in. */
+/**
+ * The caption's value: `{k}` and `{min}…{max}` with the block's params filled in. `{den:poly}` reads
+ * a param of coefficients as a polynomial, in the block's `domain` param (s or z) when it has one.
+ */
 export function captionValue(template: string | undefined, params: Record<string, ParamValue>): string {
-  return template ? template.replace(/\{(\w+)\}/g, (_, id: string) => show(params[id])) : "";
+  return template
+    ? template.replace(/\{(\w+)(:poly)?\}/g, (_, id: string, poly?: string) => {
+        const v = show(params[id]);
+        return poly && !isRef(params[id]) ? polynomial(v, typeof params.domain === "string" ? params.domain : "s") : v;
+      })
+    : "";
 }
 
 /**
