@@ -291,7 +291,7 @@ export function PackagePanel({ runtime, environment, registry, busy, error, outp
                     ))}
                   </select>
                 )}
-                {installed.has(detail.name) && !registry.pickVersion ? (
+                {installed.has(detail.name) && (!registry.pickVersion || version === environment?.packages.find((p) => p.name === detail.name)?.version) ? (
                   <span className="tag pk-installed">installed</span>
                 ) : (
                   <button className="key small" type="button" disabled={Boolean(busy)} onClick={() => registry.add(detail.name, registry.pickVersion ? version : undefined)}>
