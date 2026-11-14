@@ -63,3 +63,12 @@
 .pk-repo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 9.5px var(--font-mono); color: var(--text); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
 .pk-actions { display: flex; align-items: center; gap: 8px; }
 .pk-actions select { height: 24px; padding: 0 8px; font: 400 10.5px var(--font-mono); }
+/* PackageWindow: the floating window the panel opens in, in every app. */
+.pk-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgb(0 0 0 / 0.45); backdrop-filter: blur(2px); }
+.pk-window { width: min(660px, calc(100vw - 32px)); height: min(760px, calc(100vh - 64px)); display: flex; flex-direction: column; overflow: hidden; background: var(--surface-panel); border: 1.5px solid var(--line-ink); border-radius: var(--radius-lg); box-shadow: 0 16px 36px rgb(0 0 0 / 0.25); }
+.pk-window-head { flex: none; display: flex; align-items: center; gap: 8px; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); }
+.pk-window-head h3 { margin: 0 2px 0 0; font: 600 var(--size-sm) var(--font-sans); }
+.pk-window-head .tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 10.5px var(--font-mono); color: var(--text-muted); }
+.pk-window-head .sp { flex: 1; }
+.pk-close { background: none; border: 0; padding: 0 4px; font-size: var(--size-md); color: var(--text-muted); cursor: pointer; }
+.pk-close:hover { color: var(--text); }
