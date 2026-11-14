@@ -89,6 +89,11 @@
       "default": "./src/files/index.ts"
     },
     "./files.css": "./src/files/files.css",
+    "./packages": {
+      "types": "./src/packages/index.ts",
+      "default": "./src/packages/index.ts"
+    },
+    "./packages.css": "./src/packages/packages.css",
     "./squero": {
       "types": "./src/squero/index.ts",
       "default": "./src/squero/index.ts"
