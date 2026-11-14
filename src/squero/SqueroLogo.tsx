@@ -57,3 +57,12 @@ export function SqueroLogo({ product = "OM", height = 20, running = false }: Squ
     </svg>
   );
 }
+
+/** The Studio's wordmark in the top bar: the logo at bar height, named for assistive tech. */
+export function SqueroWordmark({ product, name, running = false }: { product: string; name: string; running?: boolean }) {
+  return (
+    <span className="wordmark" aria-label={`Squero Studio: ${name}`}>
+      <SqueroLogo product={product} height={20} running={running} />
+    </span>
+  );
+}

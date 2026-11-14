@@ -1,0 +1,57 @@
+/* The base every app shares: page, type, keys, fields, wells, screens and React Flow chrome.
+   plates.css imports it, so an app that loads plates.css has it; an app adds only its own rules. */
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body {
+  font: 400 var(--size-sm) / 1.45 var(--font-sans);
+  color: var(--text);
+  background: var(--surface-ground);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+h2 { margin: 0; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* A label: small, grey, sentence case. Names things; never says what is selected. */
+.lbl, .muted { font: 400 var(--size-2xs) var(--font-sans); color: var(--text-muted); }
+.mono { font-family: var(--font-mono); }
+/* A fact beside a name: a version, a count, a path. */
+.tag { font: 400 10.5px var(--font-mono); color: var(--text-muted); }
+
+/* Keys: flat and outlined. Every button is one. */
+button {
+  font: 500 var(--size-xs) var(--font-sans);
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--line-ink); }
+button:active:not(:disabled) { background: var(--surface-panel); }
+button:disabled { color: var(--text-muted); opacity: 0.55; cursor: default; }
+.key { height: 30px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: none; }
+.key.small { height: 24px; padding: 0 10px; font-size: var(--size-2xs); }
+.key.run { font-weight: 600; border-color: var(--line-ink); }
+
+input, select {
+  font: 400 var(--size-xs) var(--font-mono);
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+input:focus, select:focus { outline: none; border-color: var(--line-ink); box-shadow: 0 0 0 1px var(--line-ink); }
+
+.well { background: var(--surface-well); box-shadow: var(--well-shadow); color: var(--text); border-radius: var(--radius-md); }
+.well input, .well select { background: transparent; border: 0; color: var(--text); box-shadow: none; }
+
+.react-flow { background: transparent; --xy-background-pattern-dots-color-default: var(--dots); --xy-edge-stroke-default: var(--line-ink); }
+.react-flow__minimap { background: var(--surface-sunken); border: 1px solid var(--line-strong); border-radius: var(--radius-md); overflow: hidden; }
+.react-flow__attribution { background: transparent !important; }
+.react-flow__attribution a { color: var(--text-muted) !important; }
+/* Screens: black displays set into a panel, for values that change. */
+.screen { background: var(--surface-screen); color: var(--text-on-screen); border-radius: var(--radius-md); }
+.screen input, .screen select { background: transparent; border: 0; color: var(--text-on-screen); box-shadow: none; }

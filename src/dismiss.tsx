@@ -72,12 +72,19 @@ export function useDismiss(
 
 /**
  * Focus for a window floating over the page: on open, its first button (the primary
- * `button.run` before the rest) when `root` is given; on close, back to where focus was.
+ * `button.run` before the rest) when `root` is given, unless the window already put focus inside
+ * itself (an input it selects); on close, back to what had focus when it opened. The opener is
+ * read while rendering, before the window's own effects move focus.
  */
 export function useFocusReturn(root?: RefObject<HTMLElement | null>) {
+  const opener = useRef<{ root?: RefObject<HTMLElement | null>; el: HTMLElement | null } | null>(null);
+  if (!opener.current || opener.current.root !== root) {
+    opener.current = { root, el: typeof document === "undefined" ? null : (document.activeElement as HTMLElement | null) };
+  }
   useEffect(() => {
-    const before = document.activeElement as HTMLElement | null;
-    root?.current?.querySelector<HTMLElement>("button.run, button")?.focus();
+    const el = root?.current;
+    if (el && !el.contains(document.activeElement)) el.querySelector<HTMLElement>("button.run, button")?.focus();
+    const before = opener.current?.el;
     return () => {
       if (before?.isConnected) before.focus?.();
     };

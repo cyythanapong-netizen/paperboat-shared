@@ -1,5 +1,5 @@
 // The Squero Studio shell pieces shared by OM and MX: the logo, the About dialog (styles in squero.css).
-export { SqueroLogo } from "./SqueroLogo.tsx";
+export { SqueroLogo, SqueroWordmark } from "./SqueroLogo.tsx";
 export { AboutSquero, type AboutFact } from "./AboutSquero.tsx";
 export {
   STEM_M, SQUERO_LOGO_VIEWBOX, WATER_DOTS, WATER_Y, DOT_SIZE, RIPPLE_LIFT, TAG_GEOMETRY, logoWidth,

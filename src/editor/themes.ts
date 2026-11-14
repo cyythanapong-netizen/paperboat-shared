@@ -69,7 +69,18 @@ export function paletteOf(theme: string, appTheme: "light" | "dark", custom: Rec
   return EDITOR_THEMES[theme] ?? ui;
 }
 
+// Built once per palette: a settings change (font, wrap) reconfigures the theme too, and
+// HighlightStyle.define mints new CSS classes every call.
+const built = new Map<string, Extension>();
+
 export function themeExtension(p: EditorPalette): Extension {
+  const key = JSON.stringify(p);
+  let ext = built.get(key);
+  if (!ext) built.set(key, (ext = buildTheme(p)));
+  return ext;
+}
+
+function buildTheme(p: EditorPalette): Extension {
   const chrome = EditorView.theme({
     "&": { height: "100%", backgroundColor: p.background, color: p.foreground },
     ".cm-content": { caretColor: p.cursor },

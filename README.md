@@ -5,13 +5,13 @@ runtime or Modelica.
 
 | Area | Files |
 | --- | --- |
-| Tokens, Geist fonts, light/dark | `src/tokens.css`, `src/plates.css` (plate, port, wire, menu rules) |
+| Tokens, Geist fonts, light/dark | `src/tokens.css`, `src/base.css` (page, type, keys, fields, wells, screens: every app's base, imported by plates.css), `src/plates.css` (plate, port, wire, menu, bar, modal rules) |
 | Controls and menus | `Menus.tsx`, `commands.ts`, `NumberField.tsx`, `Dock.tsx` |
 | Blocks and ports | `Compact.tsx`, `Icon.tsx` + `icon.ts` (the `view.icon` primitive renderer), `portLayout.tsx`, `ports.ts` (wire rules for causal and acausal/Modelica connectors), `wireSnap.tsx`, `wireRouting.ts` (square routes, both canvases), `wireBends.tsx` (draggable wire segments) |
 | Scope and instruments | `Dashboard.tsx`, `dashboardLayout.ts` |
 | Plots | `src/plot/`: `Plot2D`, `HeatFigure`, `Colorbar`, `TexText` (MATLAB figures) and the shared `Scope`/`Sparkline` |
-| Shell | `Shell.tsx`, `Logo.tsx` |
-| Code editor | `src/editor/`: `CodeEditor` (CodeMirror 6: themes, settings, git gutter; the app brings its language), `EditorSettingsKey` (the sliders popover), `themes.ts` (palette themes: paper, ink, sepia, harbor, contrast), `useEditorSettings` (the settings in the user's `squero.toml` through the app's `ConfigStore`; `src/toml.ts` is the TOML subset it reads and patches), `gitGutter.ts`, `editor.css`. CodeMirror is a peer: dedupe `@codemirror/*` and `@lezer/highlight` in the app's Vite config. |
+| Shell | `Shell.tsx` (wordmark, `ProjectLabel`, `BarEnd` and `PanelToggle`, `StatusPill`, `Switch`, `ThemeToggle`, `useThemeChoice`), `Modal.tsx` (the one overlay dialog every app opens), `Logo.tsx` |
+| Code editor | `src/editor/`: `CodeEditor` (CodeMirror 6: themes, settings, git gutter; the app brings its language), `EditorSettingsKey` (the sliders popover), `themes.ts` (palette themes: paper, ink, sepia, harbor, contrast), `useSqueroConfig` (the app theme and editor settings in the user's `squero.toml` through the app's `ConfigStore`; `src/toml.ts` is the TOML subset it reads and patches), `gitGutter.ts`, `editor.css`. CodeMirror is a peer: dedupe `@codemirror/*` and `@lezer/highlight` in the app's Vite config. |
 | File rail | `src/files/`: `FileTree` and `FileRail` (tab strip, + key, folder head, foot, fold to a standing tab) with `files.css`. The app keeps the mutations. |
 | Squero Studio shell | `src/squero/`: `SqueroLogo` + `logo.ts` (geometry), `AboutSquero` (the About dialog; each app passes its facts) and `squero.css` (logo, busy `.wave`, modals, About). Used by Squero Studio OM and MX. |
 | Dismissal | `dismiss.tsx` (`useDismiss`, `useFocusReturn`): an outside press or Escape closes a floating surface, with a single layer stack for nested popovers |

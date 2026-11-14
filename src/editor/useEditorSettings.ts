@@ -1,12 +1,13 @@
-// The editor settings, kept in the user's config file (squero.toml, shared by Squero Studio MX
-// and OM) through the app's ConfigStore: [editor] holds the settings, [themes.<name>] the user's
-// own themes. The file is read on mount and whenever the window regains focus, so a hand edit
+// The Studios' settings, kept in the user's config file (squero.toml, shared by Squero Studio MX
+// and OM) through the app's ConfigStore: [ui] holds the app theme, [editor] the editor settings,
+// [themes.<name>] the user's own editor themes. The file is read on mount and whenever the window regains focus, so a hand edit
 // shows up on return; a change in the settings popover rewrites just the keys that changed.
 // Without a store (no server) the settings live in localStorage, as they did before the file.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readStored, writeStored } from "../storage.ts";
 import { parseToml, patchToml, type TomlTable, type TomlValue } from "../toml.ts";
 import { DEFAULT_EDITOR_SETTINGS, type EditorSettings } from "./CodeEditor.tsx";
+import { THEMES, type Theme } from "../Shell.tsx";
 import { EDITOR_THEMES, type EditorPalette, type ThemeSpec } from "./themes.ts";
 
 /** The config file as the app's server reaches it. `text` is null while there is no file yet. */
@@ -39,8 +40,10 @@ function clean(raw: Record<string, unknown>): EditorSettings {
   return out;
 }
 
-/** The settings and themes a config file sets; throws on a file outside the TOML subset. */
-export function readConfig(text: string): EditorSettings {
+export type SqueroConfig = { editor: EditorSettings; theme?: Theme };
+
+/** What a config file sets: the app theme, the editor settings and themes. Throws on a file outside the TOML subset. */
+export function readConfig(text: string): SqueroConfig {
   const doc = parseToml(text);
   const editor = (typeof doc.editor === "object" ? doc.editor : {}) as TomlTable;
   const raw: Record<string, unknown> = {};
@@ -56,18 +59,23 @@ export function readConfig(text: string): EditorSettings {
     themes[name] = spec;
   }
   if (Object.keys(themes).length) settings.themes = themes;
-  return settings;
+  const ui = (typeof doc.ui === "object" ? doc.ui : {}) as TomlTable;
+  const theme = THEMES.find((t) => t === ui.theme);
+  return { editor: settings, theme };
 }
 
 const tomlOf = (s: EditorSettings): Record<string, TomlValue> =>
   Object.fromEntries(Object.entries(KEYS).map(([k, key]) => [k, s[key] as TomlValue]));
 
 /** The file a first run writes: the current settings, every key commented, and a sample theme. */
-export function configTemplate(s: EditorSettings): string {
+export function configTemplate(s: EditorSettings, theme: Theme = "auto"): string {
   const t = tomlOf(s);
   return `# Squero Studio settings, read by Squero Studio MX and OM.
 # Edit freely: the Studios read this file again when their window regains focus, and the
 # editor's settings popover writes its changes back here, keeping your comments.
+
+[ui]
+theme = ${JSON.stringify(theme)}  # auto (follows the system), light or dark
 
 [editor]
 theme = ${JSON.stringify(t.theme)}  # "ui" follows the app: paper when light, ink when dark. Built in: ${Object.keys(EDITOR_THEMES).join(", ")}; or one of [themes] below
@@ -93,14 +101,16 @@ const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "obj
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /**
- * The editor settings for `store`'s file, with `legacyKey` (the app's old localStorage key) as
- * the fallback and the seed of a first file. Pass a stable store (module constant or memoised).
+ * The Studios' settings in `store`'s file: the app theme and the editor settings. `legacy` names
+ * the app's old localStorage keys, the fallback without a server and the seed of a first file.
+ * Pass a stable store (module constant or memoised). The app applies `theme` (useTheme).
  */
-export function useEditorSettings(store: ConfigStore | undefined, legacyKey: string): [EditorSettings, (next: EditorSettings) => void, ConfigFile | undefined] {
-  const [settings, setSettings] = useState<EditorSettings>(() => clean(readStored(legacyKey, isObject) ?? {}));
+export function useSqueroConfig(store: ConfigStore | undefined, legacy: { editor: string; theme: string }) {
+  const [editor, setEditorState] = useState<EditorSettings>(() => clean(readStored(legacy.editor, isObject) ?? {}));
+  const [theme, setThemeState] = useState<Theme>(() => storedTheme(legacy.theme) ?? "auto");
   const [file, setFile] = useState<ConfigFile>();
-  const current = useRef(settings);
-  current.current = settings;
+  const current = useRef({ editor, theme });
+  current.current = { editor, theme };
 
   useEffect(() => {
     if (!store) return;
@@ -110,8 +120,12 @@ export function useEditorSettings(store: ConfigStore | undefined, legacyKey: str
       try { got = await store.read(); } catch { return; } // no server: localStorage only
       if (!live) return;
       try {
-        if (got.text == null) await store.write(configTemplate(current.current));
-        else setSettings(readConfig(got.text));
+        if (got.text == null) await store.write(configTemplate(current.current.editor, current.current.theme));
+        else {
+          const read = readConfig(got.text);
+          setEditorState(read.editor);
+          if (read.theme) setThemeState(read.theme);
+        }
         setFile({ path: got.path });
       } catch (e) {
         if (live) setFile({ path: got.path, error: message(e) });
@@ -122,24 +136,45 @@ export function useEditorSettings(store: ConfigStore | undefined, legacyKey: str
     return () => { live = false; window.removeEventListener("focus", load); };
   }, [store]);
 
-  const update = useCallback((next: EditorSettings) => {
-    const before = tomlOf(current.current);
-    const changed = Object.fromEntries(Object.entries(tomlOf(next)).filter(([k, v]) => before[k] !== v));
-    setSettings(next);
-    const { themes: _, ...own } = next;
-    writeStored(legacyKey, own);
-    if (!store || !Object.keys(changed).length) return;
+  /** Rewrite just `values` in `[table]`, reading the file first so a hand edit since is kept. */
+  const save = useCallback((table: string, values: Record<string, TomlValue>) => {
+    if (!store || !Object.keys(values).length) return;
     void (async () => {
       try {
         const { path, text } = await store.read();
-        const out = patchToml(text ?? configTemplate(next), "editor", changed);
+        const out = patchToml(text ?? configTemplate(current.current.editor, current.current.theme), table, values);
         await store.write(out);
         try { readConfig(out); setFile({ path }); } catch (e) { setFile({ path, error: message(e) }); }
       } catch (e) {
         setFile((f) => (f ? { ...f, error: `not saved: ${message(e)}` } : f));
       }
     })();
-  }, [store, legacyKey]);
+  }, [store]);
 
-  return [settings, update, file];
+  const setEditor = useCallback((next: EditorSettings) => {
+    const before = tomlOf(current.current.editor);
+    setEditorState(next);
+    const { themes: _, ...own } = next;
+    writeStored(legacy.editor, own);
+    save("editor", Object.fromEntries(Object.entries(tomlOf(next)).filter(([k, v]) => before[k] !== v)));
+  }, [save, legacy.editor]);
+
+  const setTheme = useCallback((next: Theme) => {
+    setThemeState(next);
+    try { localStorage.setItem(legacy.theme, next); } catch { /* storage blocked: this session only */ }
+    save("ui", { theme: next });
+  }, [save, legacy.theme]);
+
+  return { editor, setEditor, theme, setTheme, file };
+}
+
+/** The theme kept under `key` as a bare string, as useThemeChoice keeps it. */
+function storedTheme(key: string): Theme | undefined {
+  try { const v = localStorage.getItem(key); return THEMES.includes(v as Theme) ? (v as Theme) : undefined; } catch { return undefined; }
+}
+
+/** The editor settings alone (useSqueroConfig without the theme), for an app that keeps its theme elsewhere. */
+export function useEditorSettings(store: ConfigStore | undefined, legacyKey: string): [EditorSettings, (next: EditorSettings) => void, ConfigFile | undefined] {
+  const c = useSqueroConfig(store, { editor: legacyKey, theme: `${legacyKey}.theme` });
+  return [c.editor, c.setEditor, c.file];
 }
