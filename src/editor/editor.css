@@ -49,3 +49,7 @@
 .cm-tooltip-autocomplete .cm-completionIcon-enum:after { content: "enum"; }
 .cm-tooltip-autocomplete .cm-completionIcon-text:after { content: "txt"; font-size: 8px; }
 .cm-tooltip-autocomplete .cm-completionIcon-unicode:after { content: "λ"; font-size: 9px; }
+
+/* The config file the settings live in, at the popover's foot. */
+.es-file { display: flex; flex-direction: column; gap: 3px; padding-top: 6px; border-top: 1px solid var(--line); font: 400 10px var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.es-error { color: var(--danger); }

@@ -3,12 +3,16 @@
 import { useRef, useState } from "react";
 import { useDismiss, useFocusReturn } from "../dismiss.tsx";
 import type { EditorSettings } from "./CodeEditor.tsx";
+import { EDITOR_THEMES } from "./themes.ts";
+import type { ConfigFile } from "./useEditorSettings.ts";
 
-export function EditorSettingsKey({ settings, onSettings, lintNote }: {
+export function EditorSettingsKey({ settings, onSettings, lintNote, file }: {
   settings: EditorSettings;
   onSettings: (next: EditorSettings) => void;
   /** What the app's linter checks, shown beside the lint switch ("% comments"). */
   lintNote?: string;
+  /** The config file the settings live in, shown at the foot so a user knows where to edit them. */
+  file?: ConfigFile;
 }) {
   const [open, setOpen] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
@@ -30,11 +34,13 @@ export function EditorSettingsKey({ settings, onSettings, lintNote }: {
       {open && (
         <div ref={panel} className="editor-settings" role="dialog" aria-label="Editor settings" data-own-keys>
           <div className="es-head"><b>editor</b><span className="sp" /><button type="button" className="plain tag" onClick={() => setOpen(false)}>close</button></div>
-          <div className="es-row"><span>theme</span><span className="seg">
-            <button type="button" className={settings.theme === "ui" ? "on" : ""} onClick={() => set("theme", "ui")} title="Follow the main UI theme">ui</button>
-            <button type="button" className={settings.theme === "light" ? "on" : ""} onClick={() => set("theme", "light")}>light</button>
-            <button type="button" className={settings.theme === "dark" ? "on" : ""} onClick={() => set("theme", "dark")}>dark</button>
-          </span></div>
+          <label className="es-row"><span>theme</span>
+            <select value={settings.theme} onChange={(e) => set("theme", e.target.value)}>
+              <option value="ui">follow ui</option>
+              {Object.keys(EDITOR_THEMES).map((t) => <option key={t} value={t}>{t}</option>)}
+              {Object.keys(settings.themes ?? {}).filter((t) => !(t in EDITOR_THEMES)).map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
           <label className="es-row"><span>font</span>
             <select value={settings.font} onChange={(e) => set("font", e.target.value as EditorSettings["font"])}>
               <option value="geist">Geist Mono</option>
@@ -61,6 +67,9 @@ export function EditorSettingsKey({ settings, onSettings, lintNote }: {
           <label className="es-check"><input type="checkbox" checked={settings.autocomplete} onChange={(e) => set("autocomplete", e.target.checked)} /> autocomplete</label>
           <label className="es-check"><input type="checkbox" checked={settings.brackets} onChange={(e) => set("brackets", e.target.checked)} /> close brackets</label>
           <label className="es-check"><input type="checkbox" checked={settings.lint} onChange={(e) => set("lint", e.target.checked)} /> lint{lintNote ? <> <span className="tag">{lintNote}</span></> : null}</label>
+          {file && <div className="es-file" title="Edit this file for your own themes; the Studio reads it again when its window regains focus">
+            <code>{file.path}</code>{file.error && <span className="es-error">{file.error}</span>}
+          </div>}
         </div>
       )}
     </>

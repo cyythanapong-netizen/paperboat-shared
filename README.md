@@ -11,7 +11,7 @@ runtime or Modelica.
 | Scope and instruments | `Dashboard.tsx`, `dashboardLayout.ts` |
 | Plots | `src/plot/`: `Plot2D`, `HeatFigure`, `Colorbar`, `TexText` (MATLAB figures) and the shared `Scope`/`Sparkline` |
 | Shell | `Shell.tsx`, `Logo.tsx` |
-| Code editor | `src/editor/`: `CodeEditor` (CodeMirror 6: themes, settings, git gutter; the app brings its language), `EditorSettingsKey` (the sliders popover), `gitGutter.ts`, `editor.css`. CodeMirror is a peer: dedupe `@codemirror/*` and `@lezer/highlight` in the app's Vite config. |
+| Code editor | `src/editor/`: `CodeEditor` (CodeMirror 6: themes, settings, git gutter; the app brings its language), `EditorSettingsKey` (the sliders popover), `themes.ts` (palette themes: paper, ink, sepia, harbor, contrast), `useEditorSettings` (the settings in the user's `squero.toml` through the app's `ConfigStore`; `src/toml.ts` is the TOML subset it reads and patches), `gitGutter.ts`, `editor.css`. CodeMirror is a peer: dedupe `@codemirror/*` and `@lezer/highlight` in the app's Vite config. |
 | File rail | `src/files/`: `FileTree` and `FileRail` (tab strip, + key, folder head, foot, fold to a standing tab) with `files.css`. The app keeps the mutations. |
 | Squero Studio shell | `src/squero/`: `SqueroLogo` + `logo.ts` (geometry), `AboutSquero` (the About dialog; each app passes its facts) and `squero.css` (logo, busy `.wave`, modals, About). Used by Squero Studio OM and MX. |
 | Dismissal | `dismiss.tsx` (`useDismiss`, `useFocusReturn`): an outside press or Escape closes a floating surface, with a single layer stack for nested popovers |
