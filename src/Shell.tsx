@@ -142,6 +142,48 @@ export function StatusPill({
   );
 }
 
+/** A side panel's show/hide key: the panel glyph, filled while the panel is open. */
+export function PanelToggle({ open, label, onToggle }: { open: boolean; label: string; onToggle: () => void }) {
+  return (
+    <button type="button" className={`key small icon-key${open ? " on" : ""}`} aria-pressed={open} aria-label={label} title={`${open ? "Hide" : "Show"} ${label}`} onClick={onToggle}>
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" />
+        <path d="M10 2.5v11" />
+        {open && <rect x="10" y="2.5" width="4.5" height="11" className="fill" />}
+      </svg>
+    </button>
+  );
+}
+
+/**
+ * The right end of every app's top bar, in one order: the app's keys (Console, Toolkits), its view
+ * switch, a panel's own switch and that panel's toggle, the status pills, the theme key. It is
+ * right-aligned and what a panel shows sits left of its toggle, so showing or hiding the panel
+ * never moves the toggle, the pills or the theme key.
+ */
+export function BarEnd({ keys, view, panel, status, theme, onTheme }: {
+  keys?: ReactNode;
+  /** A switch that is always there (Paperboat's navigator / commander / lookout). */
+  view?: ReactNode;
+  /** A side panel: its toggle, and a switch for what it shows, folded away while it is hidden. */
+  panel?: { open: boolean; label: string; onToggle: () => void; view?: ReactNode };
+  /** Status pills, the runtime last. */
+  status?: ReactNode;
+  theme: Theme;
+  onTheme: (t: Theme) => void;
+}) {
+  return (
+    <div className="bar-end">
+      {keys}
+      {view}
+      {panel?.view && <span className={`bar-panel-view${panel.open ? "" : " off"}`} inert={!panel.open}>{panel.view}</span>}
+      {panel && <PanelToggle open={panel.open} label={panel.label} onToggle={panel.onToggle} />}
+      {status}
+      <ThemeToggle theme={theme} onTheme={onTheme} />
+    </div>
+  );
+}
+
 /** The chosen option in a bracketed choice: a switch's `.opt.on`, or a tab's `[aria-selected]`. */
 const CHOSEN = ".opt.on, .opt[aria-checked='true'], .opt[aria-selected='true']";
 
