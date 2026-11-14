@@ -1,6 +1,6 @@
 {
   "name": "@paperboat/shared",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Paperboat's shared UI kit: tokens, Geist fonts, controls, blocks and ports, view.icon renderer, dashboard, shell, canvas utilities. No domain logic.",
   "private": true,
   "type": "module",
