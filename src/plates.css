@@ -1,3 +1,5 @@
+@import "./base.css";
+
 .react-flow__handle { width: 8px; height: 8px; background: var(--surface-raised); border: 1.5px solid var(--line-ink); }
 .port-step { color: var(--text); font-weight: 500; }
 .port-step .react-flow__handle, .frame-head .step-handle { width: 9px; height: 9px; border-radius: 1px; background: var(--line-ink); border-color: var(--line-ink); }
@@ -144,6 +146,13 @@
 .bar-panel-view { display: inline-flex; overflow: hidden; padding: 4px; margin: -4px; max-width: 320px; transition: max-width var(--slide), opacity var(--slide); }
 .bar-panel-view.off { max-width: 0; padding: 4px 0; opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .bar-panel-view { transition: none; } }
+/* The project's name (ProjectLabel): in the bar's flow after the menus, nudged toward the centre
+   only as far as the room before the bar's right end; then it truncates, then the bar wraps. */
+.bar > .proj { flex: 1000 1 10ch; min-width: 0; max-width: max-content; display: inline-flex; align-items: center; gap: var(--space-2); font: 400 var(--size-xs) var(--font-mono); color: var(--text-muted); cursor: default; }
+.proj-name { min-width: 0; max-width: min(300px, 24vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proj-edit { min-width: 8ch; max-width: min(300px, 24vw); height: 22px; padding: 0 6px; border: 0; border-radius: var(--radius-sm); background: var(--surface-well); box-shadow: var(--well-shadow); color: var(--text); font: 400 var(--size-xs) var(--font-mono); }
+.proj-edit:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+.proj .dirty { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); }
 .wordmark { display: inline-flex; align-items: center; gap: var(--space-2); font: 600 var(--size-md) var(--font-sans); letter-spacing: -0.01em; }
 
 .switch { display: flex; align-items: center; gap: 2px; }
@@ -283,3 +292,16 @@ span.msg-source { cursor: default; }
 .glide { position: relative; }
 .glide .opt::before, .glide .opt::after { visibility: hidden !important; }
 .glide-bracket { position: absolute; display: flex; align-items: center; pointer-events: none; opacity: 0; white-space: pre; }
+
+/* ---- Modals (Modal.tsx): one overlay, dialog and head for every app's windows ---------- */
+.modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgb(0 0 0 / 0.45); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 64px); background: var(--surface-panel); border: 1.5px solid var(--line-ink); border-radius: var(--radius-lg); box-shadow: 0 16px 36px rgb(0 0 0 / 0.25); overflow: hidden; display: flex; flex-direction: column; }
+.modal-head { flex: none; display: flex; align-items: center; gap: 8px; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); }
+.modal-head h3 { margin: 0 2px 0 0; font: 600 var(--size-sm) var(--font-sans); }
+.modal-head .tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 10.5px var(--font-mono); color: var(--text-muted); }
+.modal-head .sp { flex: 1; }
+.modal-close { background: none; border: 0; padding: 0 4px; font-size: var(--size-md); color: var(--text-muted); cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+.modal-actions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line); background: var(--surface-sunken); }
+/* A tall window: the package manager. */
+.modal-window { width: min(660px, calc(100vw - 32px)); height: min(760px, calc(100vh - 64px)); }

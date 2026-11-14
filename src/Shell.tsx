@@ -14,6 +14,7 @@ export type Page = "station" | "flow" | "dashboard";
 export type Mode = "navigator" | "commander" | "lookout";
 export const MODES: Mode[] = ["navigator", "commander", "lookout"];
 export type Theme = "auto" | "light" | "dark";
+export const THEMES: readonly Theme[] = ["auto", "light", "dark"];
 
 export type PageInfo = { id: Page; label: string; hint: string };
 export const PAGES: PageInfo[] = [
@@ -79,6 +80,18 @@ export function useTheme(choice: Theme): "light" | "dark" {
   return choice === "auto" ? system : choice;
 }
 
+/**
+ * The theme choice kept in localStorage under `key`, applied to the page: [choice, set, shown].
+ * The Squero Studios keep theirs in squero.toml instead (useSqueroConfig).
+ */
+export function useThemeChoice(key: string, fallback: Theme = "auto"): [Theme, (t: Theme) => void, "light" | "dark"] {
+  const [theme, setTheme] = useState<Theme>(() => {
+    try { const v = localStorage.getItem(key); return THEMES.includes(v as Theme) ? (v as Theme) : fallback; } catch { return fallback; }
+  });
+  useEffect(() => { try { localStorage.setItem(key, theme); } catch { /* storage blocked: this session only */ } }, [key, theme]);
+  return [theme, setTheme, useTheme(theme)];
+}
+
 const NEXT_THEME: Record<Theme, Theme> = { auto: "light", light: "dark", dark: "auto" };
 const THEME_GLYPH: Record<Theme, JSX.Element> = {
   auto: (
@@ -139,6 +152,113 @@ export function StatusPill({
         <span>{label}</span>
       </span>
     </button>
+  );
+}
+
+function wrapped(row: HTMLElement): boolean {
+  let top = -Infinity, bottom = Infinity;
+  for (const c of row.children) {
+    const r = c.getBoundingClientRect();
+    if (r.height === 0) continue; // nothing drawn (the spacer)
+    top = Math.max(top, r.top);
+    bottom = Math.min(bottom, r.bottom);
+  }
+  return top >= bottom;
+}
+
+/**
+ * The project's name in the bar, with a dot while there are changes not saved. It sits in the bar's flow
+ * (after the menus) and is pushed right toward the bar's centre, but never by more
+ * than the room before the bar's right end (BarEnd): centred while the bar has space, then sliding toward the menus, then truncating,
+ * and never under the keys on the right. Once the bar wraps onto two lines it simply follows the menus.
+ */
+export function ProjectLabel({ name, dirty = false, onRename, what = "project" }: {
+  name: string;
+  dirty?: boolean;
+  /** Double-click renames; without it the name is only shown. */
+  onRename?: (name: string) => void;
+  /** What the name is, for the rename field: "project", "file". */
+  what?: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const cancelled = useRef(false);
+  useLayoutEffect(() => {
+    const el = ref.current, bar = el?.parentElement;
+    if (!el || !bar) return;
+    const place = () => {
+      el.style.marginLeft = ""; // measure from where the flow puts it
+      const end = bar.querySelector<HTMLElement>(":scope > .bar-end");
+      if (!end || wrapped(bar)) return;
+      const b = bar.getBoundingClientRect(), r = el.getBoundingClientRect();
+      // The room before the bar's right end, less the bar's gap (the end's auto margin is that room).
+      const gap = parseFloat(getComputedStyle(bar).columnGap) || 0;
+      const shift = Math.min(b.left + b.width / 2 - r.width / 2 - r.left, end.getBoundingClientRect().left - gap - r.right);
+      if (shift >= 1) el.style.marginLeft = `${Math.floor(shift)}px`;
+    };
+    // Whatever changes the room: the window, the name, a key's label (errors, the backend's name, a lock).
+    const ro = new ResizeObserver(place);
+    const watch = () => {
+      ro.disconnect();
+      ro.observe(bar);
+      for (const c of bar.children) ro.observe(c);
+      place();
+    };
+    watch();
+    const mo = new MutationObserver(watch); // a key that comes or goes
+    mo.observe(bar, { childList: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      el.style.marginLeft = "";
+    };
+  }, []);
+  return (
+    <span
+      ref={ref}
+      className={`proj${editing ? " editing" : ""}`}
+      title={editing ? undefined : `${dirty ? `${name}: unsaved changes (Ctrl+S saves)` : name}${onRename ? " · double-click to rename" : ""}`}
+      onDoubleClick={() => {
+        if (!onRename) return;
+        setDraft(name);
+        setEditing(true);
+      }}
+    >
+      {editing ? (
+        <input
+          className="proj-edit"
+          autoFocus
+          aria-label={`${what[0].toUpperCase()}${what.slice(1)} name`}
+          value={draft}
+          style={{ width: `${Math.max(8, draft.length + 2)}ch` }}
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur(); // the blur below commits
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              cancelled.current = true;
+              e.currentTarget.blur();
+            }
+          }}
+          onBlur={() => {
+            const wasCancelled = cancelled.current;
+            cancelled.current = false;
+            setEditing(false);
+            if (wasCancelled) return;
+            const next = draft.trim();
+            if (next && next !== name) onRename?.(next);
+          }}
+        />
+      ) : (
+        <span className="proj-name">{name}</span>
+      )}
+      {dirty && <i className="dirty" role="img" aria-label="Unsaved changes" />}
+    </span>
   );
 }
 

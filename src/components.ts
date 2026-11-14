@@ -8,6 +8,7 @@ export * from "./dismiss.ts";
 export * from "./dismiss.tsx";
 export * from "./Menus.tsx";
 export * from "./Shell.tsx";
+export * from "./Modal.tsx";
 export * from "./Dock.tsx";
 export * from "./Dashboard.tsx";
 export * from "./Icon.tsx";

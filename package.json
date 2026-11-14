@@ -54,6 +54,7 @@
       "default": "./test/fixtures/icons.ts"
     },
     "./tokens.css": "./src/tokens.css",
+    "./base.css": "./src/base.css",
     "./plates.css": "./src/plates.css",
     "./viewCube": {
       "types": "./src/viewCube.ts",
