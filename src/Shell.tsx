@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type JSX, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { Logo } from "./Logo.tsx";
+import { MenuBar } from "./Menus.tsx";
+import type { Command, MenuId } from "./commands.ts";
 
 /**
  * The app's frame (apps/web/DESIGN.md): two view modes.
@@ -259,6 +261,36 @@ export function ProjectLabel({ name, dirty = false, onRename, what = "project" }
       )}
       {dirty && <i className="dirty" role="img" aria-label="Unsaved changes" />}
     </span>
+  );
+}
+
+/**
+ * Every app's top bar, the one layout: the wordmark, the menus with About, the project's name
+ * (ProjectLabel), then `children`, which is the app's BarEnd.
+ */
+export function AppBar({ brand, commands, menuLabels, about, project, className = "", children }: {
+  brand: ReactNode;
+  commands: Command[];
+  menuLabels?: Partial<Record<MenuId, string>>;
+  /** The About key after the menus: what it opens is the app's. */
+  about: { title: string; shown: boolean; onOpen: () => void };
+  /** The name in the middle; omit for none. */
+  project?: { name: string; dirty?: boolean; onRename?: (name: string) => void; what?: string };
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <header className={`bar${className ? ` ${className}` : ""}`}>
+      {brand}
+      <div className="menubar-group" data-own-keys>
+        <MenuBar commands={commands} menuLabels={menuLabels} />
+        <button type="button" className="menu-title" aria-haspopup="dialog" aria-expanded={about.shown} title={about.title} onClick={about.onOpen}>
+          About
+        </button>
+      </div>
+      {project && <ProjectLabel {...project} />}
+      {children}
+    </header>
   );
 }
 
